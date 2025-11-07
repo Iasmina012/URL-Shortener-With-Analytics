@@ -7,7 +7,8 @@ use webbrowser;
 async fn index() -> impl Responder {
 
     let html = r#"<!doctype html>
-<html lang="ro">
+    
+<html lang="en">
 
 <head>
 
@@ -80,6 +81,31 @@ async fn index() -> impl Responder {
     button:hover {
       background: #1e4fcf;
     }
+    
+    .shortened-url { 
+        margin-top: 1rem; 
+        padding: 12px; 
+        background: #f1f5f9; 
+        border-radius: 8px; 
+        font-family: monospace; 
+        text-align: center; 
+    }
+    
+    .copy-btn { 
+        margin-top: 6px; 
+        padding: 6px 12px; 
+        font-size: 0.9rem; 
+        border-radius: 6px; 
+        border: none; 
+        cursor: pointer; 
+        background: #2563eb; 
+        color: white; 
+    }
+    
+    .copy-btn:hover { 
+        background: #1e4fcf;
+    }
+    
   </style>
 
 </head>
@@ -90,8 +116,9 @@ async fn index() -> impl Responder {
 
     <h1>URL Shortener with Analytics</h1>
 
-    <form action="/shorten" method="POST">
-
+    <!-- <form action="/shorten" method="POST"> -->
+      <form id="shorten-form">
+      
       <label>URL to shorten:</label>
       <input type="url" name="url" placeholder="https://example.com/rust-project" required>
 
@@ -105,11 +132,47 @@ async fn index() -> impl Responder {
 
     </form>
 
+    <div id="shortened-card" style="display:none;" class="shortened-url">
+    
+      <div id="short-url-text"></div>
+      <button class="copy-btn" onclick="copyUrl()">Copy</button>
+    
+    </div>
+    
   </div>
 
+    <script>
+    
+        const form = document.getElementById('shorten-form');
+        const shortenedCard = document.getElementById('shortened-card');
+        const shortUrlText = document.getElementById('short-url-text');
+
+        form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const url = formData.get('url');
+        const slug = formData.get('slug');
+
+        //Mockup shortened URL
+        const shortUrl = `http://localhost:8080/${slug || Math.random().toString(36).substring(2,8)}`;
+
+        shortUrlText.innerHTML = `<a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
+        shortenedCard.style.display = 'block';
+        });
+
+        function copyUrl() {
+        const link = shortUrlText.querySelector('a').href;
+        navigator.clipboard.writeText(link).then(() => {
+            alert('Copied to clipboard!');
+        });
+        }
+        
+    </script>
+  
 </body>
 
-</html>"#;
+</html>
+"#;
 
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
