@@ -1,6 +1,8 @@
 [package]
 name = "Proiect_ATAD"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
+actix-web = "4"
+webbrowser = "0.7"

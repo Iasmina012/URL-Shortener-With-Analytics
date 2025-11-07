@@ -1,0 +1,30 @@
+# Build and output files
+/target/
+
+# Temp and log files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# MacOS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Backup files
+*.rs.bk
+
+# Testing and benchmarks
+/benchmarks/
+/examples/
+/tests/
+
+# Rust Analyzer and cached files
+/target/debug/.fingerprint/
