@@ -1,5 +1,7 @@
 <!doctype html>
+
 <html lang="en">
+    
 <head>
 
   <meta charset="utf-8">
@@ -96,6 +98,12 @@
         background: #1e4fcf;
     }
 
+    .error-box {
+        background: #ffe6e6;
+        color: #b30000;
+        border: 1px solid #ff8080;
+    }
+
   </style>
 
 </head>
@@ -108,7 +116,7 @@
 
   <form id="shorten-form">
 
-    <label>URL to shorten:</label>
+    <label>URL to Shorten:</label>
     <input type="url" name="url" placeholder="https://example.com/rust-project" required>
 
     <label>Custom Slug (optional):</label>
@@ -117,43 +125,76 @@
     <label>Expiration Date (optional):</label>
     <input type="date" name="expires">
 
-    <button type="submit">Generate a shorter URL</button>
+    <button type="submit">Generate a Short URL</button>
 
   </form>
 
   <div id="shortened-card" style="display:none;" class="shortened-url">
+
     <a id="short-url-text" href="#" target="_blank"></a>
-    <button class="copy-btn" onclick="copyUrl()">Copy</button>
+    <button id="copy-btn" class="copy-btn" onclick="copyUrl()">Copy</button>
+    
   </div>
 
 </div>
 
 <script>
     
-        const form = document.getElementById('shorten-form');
-        const shortenedCard = document.getElementById('shortened-card');
-        const shortUrlText = document.getElementById('short-url-text');
+    const form = document.getElementById("shorten-form");
+    const shortenedCard = document.getElementById("shortened-card");
+    const shortUrlText = document.getElementById("short-url-text");
+    const copyBtn = document.getElementById("copy-btn");
 
-        form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
+
+        shortenedCard.style.display = "none";
+        shortenedCard.classList.remove("error-box");
+        copyBtn.style.display = "block"; 
+
         const formData = new FormData(form);
-        const url = formData.get('url');
-        const slug = formData.get('slug');
 
-        //Mockup shortened URL
-        const shortUrl = `http://localhost:8080/${slug || Math.random().toString(36).substring(2,8)}`;
-
-        shortUrlText.innerHTML = `<a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
-        shortenedCard.style.display = 'block';
+        const response = await fetch("/shorten", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                url: formData.get("url"),
+                slug: formData.get("slug"),
+            }),
         });
 
-        function copyUrl() {
-        const link = shortUrlText.querySelector('a').href;
-        navigator.clipboard.writeText(link).then(() => {
-            alert('Copied to clipboard!');
-        });
+        const data = await response.json();
+        shortenedCard.style.display = "block";
+
+        if (!response.ok) {
+            
+            //slug already exists
+            shortUrlText.textContent = data.error;
+            shortUrlText.removeAttribute("href");
+
+            shortenedCard.classList.add("error-box");
+            copyBtn.style.display = "none";
+            return;
+
         }
-        
+
+        //slug doesn't exist
+        shortUrlText.href = data.short_url;
+        shortUrlText.textContent = data.short_url;
+        shortenedCard.classList.remove("error-box");
+        copyBtn.style.display = "block";
+
+    });
+
+    function copyUrl() {
+
+        const link = shortUrlText.href;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("Copied to clipboard!");
+        });
+
+    }
+ 
     </script>
 
 </body>

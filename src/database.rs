@@ -39,8 +39,9 @@ pub async fn init_db() -> SqlitePool {
     .await
     .expect("Failed to create table");
 
-    println!("Database initialized successfully!");
+    println!("Database initialized successfully");
     pool
+
 }
 
 pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str) -> sqlx::Result<()> {
@@ -63,5 +64,21 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Option<String> {
         .ok()?;
 
     row.map(|r| r.get::<String, _>("url"))
+
+}
+
+pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
+    
+    sqlx::query("DELETE FROM urls")
+        .execute(pool)
+        .await?;
+
+    //reset contor = 1
+    sqlx::query("DELETE FROM sqlite_sequence WHERE name='urls'")
+        .execute(pool)
+        .await?;
+
+    println!("Database reset successfully: all entries removed and IDs reset.");
+    Ok(())
 
 }
