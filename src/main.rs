@@ -5,7 +5,7 @@ use webbrowser;
 
 #[get("/")]
 async fn index() -> impl Responder {
-    let html = include_str!("index.html"); // CITEȘTE index.html
+    let html = include_str!("index.html");
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html)
