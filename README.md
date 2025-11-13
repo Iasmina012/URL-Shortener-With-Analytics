@@ -33,7 +33,7 @@ This makes the project easier to understand, extend, and maintain.
 This architecture strikes a balance between **simplicity** and **scalability**, making it ideal for small to medium web services, educational projects, or prototypes that could later evolve into production grade systems.
 
 <p align="center">
-  <img src="file:///Users/iasmina012/Desktop/ATAD%20Architecture.png" alt="ATAD Architecture" width="600"/>
+  <img width="535" height="344" alt="ATAD Architecture" src="https://github.com/user-attachments/assets/a37308be-2b03-4712-931b-b6fae5cd1e0b" />
 </p>
 
 ### Components
