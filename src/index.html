@@ -83,7 +83,7 @@
       font-family: monospace;
     }
 
-    .copy-btn { 
+    .copy-qr-btn { 
         margin-top: 6px; 
         padding: 6px 12px; 
         font-size: 0.9rem; 
@@ -94,7 +94,7 @@
         color: white; 
     }
     
-    .copy-btn:hover { 
+    .copy-qr-btn:hover { 
         background: #1e4fcf;
     }
 
@@ -132,8 +132,20 @@
   <div id="shortened-card" style="display:none;" class="shortened-url">
 
     <a id="short-url-text" href="#" target="_blank"></a>
-    <button id="copy-btn" class="copy-btn" onclick="copyUrl()">Copy</button>
+    <button id="copy-btn" class="copy-qr-btn" onclick="copyUrl()">Copy</button>
     
+  </div>
+
+  <div id="qr-section" style="display:none; text-align:center; margin-top:15px;">
+
+    <button id="qr-btn" class="copy-qr-btn" onclick="generateQR()">Generate QR Code</button>
+  
+    <div>
+
+      <img id="qr-image" style="margin-top:10px; max-width:250px;"/>
+  
+    </div>
+
   </div>
 
 </div>
@@ -144,9 +156,15 @@
     const shortenedCard = document.getElementById("shortened-card");
     const shortUrlText = document.getElementById("short-url-text");
     const copyBtn = document.getElementById("copy-btn");
+    const qrSection = document.getElementById("qr-section");
+    const qrBtn = document.getElementById("qr-btn");
+    const qrImage = document.getElementById("qr-image");
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
+
+        qrSection.style.display = "none";
+        qrImage.src = "";
 
         shortenedCard.style.display = "none";
         shortenedCard.classList.remove("error-box");
@@ -175,6 +193,7 @@
 
             shortenedCard.classList.add("error-box");
             copyBtn.style.display = "none";
+            qrSection.style.display = "none";
             return;
 
         }
@@ -184,6 +203,7 @@
         shortUrlText.textContent = data.short_url;
         shortenedCard.classList.remove("error-box");
         copyBtn.style.display = "block";
+        qrSection.style.display = "block";
 
     });
 
@@ -194,6 +214,12 @@
             alert("Copied to clipboard!");
         });
 
+    }
+
+    function generateQR() {
+        const shortUrl = shortUrlText.textContent;
+        const slug = shortUrl.split('/').pop();
+        qrImage.src = `/qr/${slug}`;
     }
  
     </script>
