@@ -7,6 +7,7 @@ use rand::distributions::Alphanumeric;
 use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
 use std::io::Cursor;
+use chrono::NaiveDate;
 
 mod database;
 use database::{init_db, insert_url, get_url};
@@ -18,53 +19,79 @@ async fn index() -> impl Responder {
     let html = include_str!("index.html");
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(html)
-        
+        .body(html)   
 
 } 
 
 #[post("/shorten")]
 async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>) -> impl Responder {
-    
-    let url = json["url"].as_str().unwrap();
-    let slug = json["slug"].as_str().unwrap_or("");
 
-    let final_slug = if slug.is_empty() {
-        thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(6)
-            .map(char::from)
-            .collect()
-    } else {
-        slug.to_string()
+    let url = match json.get("url").and_then(|v| v.as_str()) {
+        Some(u) if !u.trim().is_empty() => u.trim(),
+        _ => return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Missing or invalid 'url' field" })),
     };
 
-    match insert_url(&pool, &final_slug, url).await {
+    let optional_slug = json.get("slug").and_then(|v| v.as_str()).map(|s| s.trim()).filter(|s| !s.is_empty());
+
+    let final_slug = match optional_slug {
+        Some(s) => s.to_string(),
+        None => thread_rng().sample_iter(&Alphanumeric).take(6).map(char::from).collect()
+    };
+
+    let expires_optional = json.get("expires").and_then(|v| v.as_str()).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
+
+    if let Some(ref ex) = expires_optional {
+        if NaiveDate::parse_from_str(ex, "%Y-%m-%d").is_err() {
+            return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Invalid date format for 'expires'. Use YYYY-MM-DD" }));
+        }
+    }
+
+    match insert_url(&pool, &final_slug, url, expires_optional.clone()).await {
         Ok(_) => HttpResponse::Ok().json(serde_json::json!({
-            "short_url": format!("http://localhost:8080/{}", final_slug)
+            "short_url": format!("http://localhost:8080/{}", final_slug),
+            "expires": expires_optional
         })),
-        Err(_) => HttpResponse::BadRequest().json(serde_json::json!({
-            "error": "Slug already exists!"
-        }))
+        Err(e) => {
+            let msg = format!("{}", e);
+            if msg.contains("UNIQUE") || msg.contains("unique") {
+                HttpResponse::BadRequest().json(serde_json::json!({ "error": "Slug already exists!" }))
+            } else {
+                HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Database error" }))
+            }
+        }
     }
 
 }
 
 #[get("/{slug}")]
 async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Responder {
-    
-    if let Some(url) = get_url(&pool, &slug).await {
-        return HttpResponse::Found()
-            .append_header(("Location", url))
-            .finish();
-    }
  
-    HttpResponse::NotFound().body("Short URL not found")
+    let slug = slug.into_inner();
+
+    match get_url(&pool, &slug).await {
+        Ok(Some((url, expires_opt))) => {
+            //checks expiration server-side
+            if let Some(exp_str) = expires_opt {
+                if let Ok(exp_date) = NaiveDate::parse_from_str(&exp_str, "%Y-%m-%d") {
+                    if exp_date < chrono::Utc::now().date_naive() {
+                        return HttpResponse::Gone().body("This link has expired");
+                    }
+                }
+            }
+
+            HttpResponse::Found()
+                .append_header(("Location", url))
+                .finish()
+        }
+        Ok(None) => HttpResponse::NotFound().body("Short URL not found"),
+        Err(_) => HttpResponse::InternalServerError().body("Database error"),
+    }
 
 }
 
 #[get("/qr/{slug}")]
 async fn generate_qr(slug: web::Path<String>) -> impl Responder {
+
     let short_url = format!("http://localhost:8080/{}", slug);
 
     let code = QrCode::new(short_url.as_bytes()).unwrap();
@@ -81,6 +108,7 @@ async fn generate_qr(slug: web::Path<String>) -> impl Responder {
     HttpResponse::Ok()
         .content_type("image/png")
         .body(buffer.into_inner())
+        
 }
 
 #[actix_web::main]
