@@ -31,7 +31,8 @@ pub async fn init_db() -> SqlitePool {
         CREATE TABLE IF NOT EXISTS urls (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             slug TEXT UNIQUE NOT NULL,
-            url TEXT NOT NULL
+            url TEXT NOT NULL,
+            expires_at TEXT
         );
         "#
     )
@@ -39,31 +40,54 @@ pub async fn init_db() -> SqlitePool {
     .await
     .expect("Failed to create table");
 
+    //ensure column exists for older DBs (that didn't have expires_at before)
+    let has_expires = sqlx::query("PRAGMA table_info(urls);")
+        .fetch_all(&pool)
+        .await
+        .expect("Failed to read table info")
+        .into_iter()
+        .any(|r| r.get::<String, _>("name") == "expires_at");
+
+    if !has_expires {
+        //add column if it does not exist
+        let _ = sqlx::query("ALTER TABLE urls ADD COLUMN expires_at TEXT;")
+            .execute(&pool)
+            .await;
+    }
+
     println!("Database initialized successfully");
     pool
 
 }
 
-pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str) -> sqlx::Result<()> {
-
-    sqlx::query("INSERT INTO urls (slug, url) VALUES (?, ?)")
+pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str, expires_at: Option<String>) -> sqlx::Result<()> {
+    
+    sqlx::query("INSERT INTO urls (slug, url, expires_at) VALUES (?, ?, ?)")
         .bind(slug)
         .bind(url)
+        .bind(expires_at)
         .execute(pool)
         .await?;
     Ok(())
 
 }
 
-pub async fn get_url(pool: &SqlitePool, slug: &str) -> Option<String> {
-
-    let row = sqlx::query("SELECT url FROM urls WHERE slug = ?")
+pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Option<String>)>, sqlx::Error> {
+   
+    let row = sqlx::query("SELECT url, expires_at FROM urls WHERE slug = ?")
         .bind(slug)
         .fetch_optional(pool)
-        .await
-        .ok()?;
+        .await?;
 
-    row.map(|r| r.get::<String, _>("url"))
+    if let Some(r) = row {
+        let url: String = r.get("url");
+        let expires_at: Option<String> = r.get::<Option<String>, _>("expires_at");
+        Ok(Some((url, expires_at)))
+    } else {
+        Ok(None)
+    }
+
+    //returns Ok(Some((url, expires_at_opt))) if found
 
 }
 
