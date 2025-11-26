@@ -4,6 +4,9 @@ use webbrowser;
 use sqlx::SqlitePool;
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
+use qrcode::QrCode;
+use image::{Luma, ImageOutputFormat};
+use std::io::Cursor;
 
 mod database;
 use database::{init_db, insert_url, get_url};
@@ -60,6 +63,26 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl 
 
 }
 
+#[get("/qr/{slug}")]
+async fn generate_qr(slug: web::Path<String>) -> impl Responder {
+    let short_url = format!("http://localhost:8080/{}", slug);
+
+    let code = QrCode::new(short_url.as_bytes()).unwrap();
+
+    let image = code.render::<Luma<u8>>()
+        .min_dimensions(300, 300)
+        .build();
+
+    let mut buffer = Cursor::new(Vec::new());
+    image
+        .write_to(&mut buffer, ImageOutputFormat::Png)
+        .unwrap();
+
+    HttpResponse::Ok()
+        .content_type("image/png")
+        .body(buffer.into_inner())
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -94,6 +117,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(shorten)
             .service(redirect)
+            .service(generate_qr)
     })
     .bind((host, port))?
     .run()
