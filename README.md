@@ -3,9 +3,11 @@
 The following project is written in **Rust** using **Actix-Web** and **SQLx + SQLite**, it provides both a RESTful API and a simple web interface using **HTML** and **JavaScript**.
 
 **Status**
+
 Development in Progress...
-- Implemented: MVP (shorten with and without custom slug and redirect URLs), Analytics (expiration date)
-- Soon to be implemented: Analytics (QR code generator, rate limiter, clicks, unique visitors, geographic location)
+
+- Implemented: MVP (shorten with and without custom slug and redirect URLs), Analytics (qr code generator, expiration date)
+- Soon to be implemented: Analytics (rate limiter, clicks, unique visitors, geographic location)
 
 ## Description
 
