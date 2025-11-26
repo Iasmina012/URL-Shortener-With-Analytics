@@ -4,8 +4,8 @@ The following project is written in **Rust** using **Actix-Web** and **SQLx + SQ
 
 **Status**
 Development in Progress...
-- Implemented: MVP (shorten with and without custom slug and redirect URLs)
-- Soon to be implemented: Analytics (expiration date, QR code generator, rate limiter, clicks, unique visitors, geographic location)
+- Implemented: MVP (shorten with and without custom slug and redirect URLs), Analytics (expiration date)
+- Soon to be implemented: Analytics (QR code generator, rate limiter, clicks, unique visitors, geographic location)
 
 ## Description
 
