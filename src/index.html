@@ -199,7 +199,7 @@
 
         //slug doesn't exist
         shortUrlText.href = data.short_url;
-        shortUrlText.textContent = data.short_url;
+        shortUrlText.textContent = data.short_url + (data.expires ? ` (expires: ${data.expires})` : "");
         shortenedCard.classList.remove("error-box");
         copyBtn.style.display = "block";
         qrSection.style.display = "block";
@@ -218,7 +218,7 @@
 
     function generateQR() {
         const shortUrl = shortUrlText.textContent;
-        const slug = shortUrl.split('/').pop();
+        const slug = shortUrl.split('/').pop().split(' ')[0];
         qrImage.src = `/qr/${slug}`;
     }
  
