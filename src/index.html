@@ -19,9 +19,6 @@
 
     body {
       font-family: Arial, Helvetica, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       min-height: 100vh;
       margin: 0;
       padding-top: 40px;
@@ -30,6 +27,48 @@
       overflow-y: auto; 
     }
 
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: white;
+      padding: 0 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 8px 4px;
+      color: #374151;
+    }
+
+
+    nav button.active {
+      color: #2563eb;
+      font-weight: bold;
+    }
+    
+    .container {
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    
     .card {
       background: white;
       padding: 2rem 3rem;
@@ -107,49 +146,91 @@
         border: 1px solid #ff8080;
     }
 
+    .hidden { 
+      display: none; 
+    }
+
+    .analytics-box {
+      background: #eef2ff;
+      padding: 14px;
+      border-radius: 8px;
+      margin-top: 10px;
+      text-align: center;
+    }
+
   </style>
 
 </head>
 
 <body>
 
-<div class="card">
+<header>
 
-  <h1>URL Shortener with Analytics</h1>
+  <h2>URL Shortener with Analytics</h2>
+  <nav>
+    <button id="homeBtn" class="active" onclick="showHome()">Home</button>
+    <button id="analyticsBtn" onclick="showAnalytics()">Analytics</button>
+  </nav>
 
-  <form id="shorten-form">
+</header>
 
-    <label>URL to Shorten:</label>
-    <input type="url" name="url" placeholder="https://example.com/rust-project" required>
+<div class="container">
 
-    <label>Custom Slug (optional):</label>
-    <input type="text" name="slug" placeholder="e.g.: link-name">
+  <div id="home-view" class="card">
+   
+    <h1>URL Shortener</h1>
 
-    <label>Expiration Date (optional):</label>
-    <input type="date" name="expires">
+    <form id="shorten-form">
+      
+      <label>URL to Shorten:</label>
+      <input type="url" name="url" placeholder="https://example.com/rust-project" required>
 
-    <button type="submit">Generate a Short URL</button>
+      <label>Custom Slug (optional):</label>
+      <input type="text" name="slug" placeholder="e.g.: link-name">
 
-  </form>
+      <label>Expiration Date (optional):</label>
+      <input type="date" name="expires">
 
-  <div id="shortened-card" style="display:none;" class="shortened-url">
+      <button type="submit">Generate a Short URL</button>
 
-    <a id="short-url-text" href="#" target="_blank"></a>
-    <button id="copy-btn" class="copy-qr-btn" onclick="copyUrl()">Copy</button>
-    <button id="qr-btn" class="copy-qr-btn" onclick="generateQR()">Generate QR Code</button>
-    
-  </div>
+    </form>
 
-  <div id="qr-section" style="display:none; text-align:center; margin-top:15px;">
+    <div id="shortened-card" class="shortened-url hidden">
+      
+      <a id="short-url-text" href="#" target="_blank"></a>
+      <button id="copy-btn" class="copy-qr-btn" onclick="copyUrl()">Copy</button>
+      <button id="qr-btn" class="copy-qr-btn" onclick="generateQR()">Generate QR Code</button>
+      
+    </div>
+
+    <div id="qr-section" style="display:none; text-align:center; margin-top:15px;">
 
       <img id="qr-image" style="margin-top:10px; max-width:250px;"/>
 
+    </div>
+
   </div>
 
-</div>
+  <div id="analytics-view" class="card hidden">
+
+    <h1>Analytics</h1>
+
+    <label>Enter Shortened URL</label>
+    <input type="text" id="analytics-slug" placeholder="http://localhost:8080/slug">
+    <button onclick="loadAnalytics()">View analytics</button>
+
+    <div id="analytics-result" class="analytics-box hidden">
+      <label> Total clicks: <span id="click-count">0</span> </label>
+    </div>
+    
+  </div>
 
 <script>
-    
+
+    const homeView = document.getElementById("home-view");
+    const analyticsView = document.getElementById("analytics-view");
+    const homeBtn = document.getElementById("homeBtn");
+    const analyticsBtn = document.getElementById("analyticsBtn");
     const form = document.getElementById("shorten-form");
     const shortenedCard = document.getElementById("shortened-card");
     const shortUrlText = document.getElementById("short-url-text");
@@ -158,6 +239,24 @@
     const qrBtn = document.getElementById("qr-btn");
     const qrImage = document.getElementById("qr-image");
 
+    function showHome() {
+
+      document.getElementById("home-view").classList.remove("hidden");
+      document.getElementById("analytics-view").classList.add("hidden");
+      homeBtn.classList.add("active");
+      analyticsBtn.classList.remove("active");
+
+    }
+
+    function showAnalytics() {
+
+      document.getElementById("home-view").classList.add("hidden");
+      document.getElementById("analytics-view").classList.remove("hidden");
+      analyticsBtn.classList.add("active");
+      homeBtn.classList.remove("active");
+
+    }
+  
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -209,19 +308,59 @@
 
     function copyUrl() {
 
-        const link = shortUrlText.href;
-        navigator.clipboard.writeText(link).then(() => {
-            alert("Copied to clipboard!");
-        });
+      const link = shortUrlText.href;
+      navigator.clipboard.writeText(link).then(() => { alert("Copied to clipboard!"); });
 
     }
 
     function generateQR() {
-        const shortUrl = shortUrlText.textContent;
-        const slug = shortUrl.split('/').pop().split(' ')[0];
-        qrImage.src = `/qr/${slug}`;
+
+      const shortUrl = shortUrlText.textContent;
+      const slug = shortUrl.split('/').pop().split(' ')[0];
+      qrImage.src = `/qr/${slug}`;
+
     }
- 
+
+    async function loadAnalytics() {
+      
+      let input = document.getElementById("analytics-slug").value.trim();
+
+      if (!input) {
+        alert("Enter a short URL");
+        return;
+      }
+
+      //accepts slug/URL
+      let slug;
+
+      try {
+        if (input.startsWith("http")) {
+          const url = new URL(input);
+          slug = url.pathname.replace("/", "");
+        } else {
+          slug = input;
+        }
+      } catch {
+        alert("Invalid URL");
+        return;
+      }
+
+      if (!slug) {
+        alert("Invalid short URL");
+        return;
+      }
+
+      const res = await fetch(`/stats/${slug}`);
+      if (!res.ok) {
+        alert("Link not found");
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById("analytics-result").classList.remove("hidden");
+      document.getElementById("click-count").textContent = data.total_clicks;
+    
+    }
     </script>
 
 </body>
