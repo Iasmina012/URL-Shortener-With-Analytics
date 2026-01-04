@@ -26,6 +26,7 @@ pub async fn init_db() -> SqlitePool {
         .await
         .expect("Couldn't connect to SQLite database");
 
+    //urls table
     sqlx::query(
         r#"
         CREATE TABLE IF NOT EXISTS urls (
@@ -54,6 +55,22 @@ pub async fn init_db() -> SqlitePool {
             .execute(&pool)
             .await;
     }
+
+    //clicks table
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS clicks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT NOT NULL,
+            ip TEXT,
+            user_agent TEXT,
+            clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        "#
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to create table");
 
     println!("Database initialized successfully");
     pool
@@ -88,6 +105,29 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Op
     }
 
     //returns Ok(Some((url, expires_at_opt))) if found
+
+}
+
+pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua: Option<String>) {
+   
+    let _ = sqlx::query("INSERT INTO clicks (slug, ip, user_agent) VALUES (?, ?, ?)")
+        .bind(slug)
+        .bind(ip)
+        .bind(ua)
+        .execute(pool)
+        .await;
+
+}
+
+pub async fn get_click_stats(pool: &SqlitePool, slug: &str) -> i64 {
+   
+    let row = sqlx::query("SELECT COUNT(*) as total FROM clicks WHERE slug = ?")
+        .bind(slug)
+        .fetch_one(pool)
+        .await
+        .unwrap();
+
+    row.get::<i64, _>("total")
 
 }
 

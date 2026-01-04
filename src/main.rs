@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use std::{thread, time::Duration};
 use webbrowser;
 use sqlx::SqlitePool;
@@ -10,7 +10,7 @@ use std::io::Cursor;
 use chrono::NaiveDate;
 
 mod database;
-use database::{init_db, insert_url, get_url};
+use database::{init_db, insert_url, get_url, record_click, get_click_stats};
 //use database::{reset_db};
 
 #[get("/")]
@@ -64,11 +64,12 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
 }
 
 #[get("/{slug}")]
-async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Responder {
- 
+async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responder {
+    
     let slug = slug.into_inner();
 
     match get_url(&pool, &slug).await {
+        
         Ok(Some((url, expires_opt))) => {
             //checks expiration server-side
             if let Some(exp_str) = expires_opt {
@@ -79,6 +80,15 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl 
                 }
             }
 
+            //saves click
+            let ip = req.peer_addr().map(|a| a.ip().to_string());
+            let ua = req.headers()
+                .get("User-Agent")
+                .and_then(|v| v.to_str().ok())
+                .map(|s| s.to_string());
+
+            record_click(&pool, &slug, ip, ua).await;
+
             HttpResponse::Found()
                 .append_header(("Location", url))
                 .finish()
@@ -87,6 +97,18 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl 
         Err(_) => HttpResponse::InternalServerError().body("Database error"),
     }
 
+}
+
+#[get("/stats/{slug}")]
+async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Responder {
+    
+    let clicks = get_click_stats(&pool, &slug).await;
+
+    HttpResponse::Ok().json(serde_json::json!({
+        "slug": slug.into_inner(),
+        "total_clicks": clicks
+    }))
+    
 }
 
 #[get("/qr/{slug}")]
@@ -146,6 +168,7 @@ async fn main() -> std::io::Result<()> {
             .service(shorten)
             .service(redirect)
             .service(generate_qr)
+            .service(stats)
     })
     .bind((host, port))?
     .run()
