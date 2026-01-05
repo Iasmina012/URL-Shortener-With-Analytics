@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex};
 use webbrowser;
-use sqlx::{SqlitePool};
+use sqlx::{SqlitePool, Row};
 use rand::{thread_rng, Rng, distributions::Alphanumeric};
 use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
@@ -153,10 +153,26 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
 #[get("/stats/{slug}")]
 async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Responder {
     
+    let slug = slug.into_inner();
+
+    let row = sqlx::query("SELECT expires_at FROM urls WHERE slug = ?")
+        .bind(&slug)
+        .fetch_optional(pool.as_ref())
+        .await
+        .unwrap();
+
+    if row.is_none() {
+        return HttpResponse::NotFound().json(serde_json::json!({ "error": "Link not found" }));
+    }
+
+    let expires_at: Option<String> = row.unwrap().get("expires_at");
+
     let clicks = get_click_stats(&pool, &slug).await;
 
     HttpResponse::Ok().json(serde_json::json!({
-        "slug": slug.into_inner(),
+        "slug": slug,
+        "short_url": format!("http://localhost:8080/{}", slug),
+        "expires_at": expires_at,
         "total_clicks": clicks
     }))
     

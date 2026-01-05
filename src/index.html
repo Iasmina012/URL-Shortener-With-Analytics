@@ -126,6 +126,7 @@
     }
 
     .copy-qr-btn { 
+        text-decoration: none;
         margin-top: 6px; 
         padding: 6px 12px; 
         font-size: 0.9rem; 
@@ -156,6 +157,53 @@
       border-radius: 8px;
       margin-top: 10px;
       text-align: center;
+      align-items: center;
+    }
+
+    .analytics-item {
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 0.95rem;
+      background: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .qr-container {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    #stats-qr {
+      max-width: 200px;
+      margin-bottom: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: white;
+      padding: 5px;
+    }
+    .qr-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .qr-row img {
+      max-width: 100px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: white;
+      padding: 5px;
+    }
+
+    .qr-row a, .qr-row button {
+      flex-shrink: 0;
     }
 
   </style>
@@ -166,7 +214,7 @@
 
 <header>
 
-  <h2>URL Shortener with Analytics</h2>
+  <h2 style="color:#2563eb">URL Shortener with Analytics</h2>
   <nav>
     <button id="homeBtn" class="active" onclick="showHome()">Home</button>
     <button id="analyticsBtn" onclick="showAnalytics()">Analytics</button>
@@ -218,12 +266,30 @@
     <label>Enter Shortened URL</label>
     <input type="text" id="analytics-slug" placeholder="http://localhost:8080/slug">
     <button onclick="loadAnalytics()">View analytics</button>
-   
+
     <div id="analytics-result" class="analytics-box hidden">
-      <label> Total clicks: <span id="click-count">0</span> </label>
-    </div>
-    
+     
+      <div class="analytics-item">
+        <label> Expiration Date: <span id="expires-at">Never</span> </label>
+      </div>
+      
+      <div class="analytics-item">
+      <label> Total Clicks: <span id="click-count">0</span> </label>
+      </div>
+
+      <div class="analytics-item">
+        <div class="analytics-item">
+          <label> QR Code: </label>
+          <div class="qr-row">
+            <img id="stats-qr" style="display:none;" />
+            <a id="download-qr" download="qr-code.png" class="copy-qr-btn">Download QR Code</a>
+          </div>
+        </div>
+      </div>
+      
   </div>
+    
+</div>
 
 <script>
 
@@ -357,11 +423,22 @@
       }
 
       const data = await res.json();
+
       document.getElementById("analytics-result").classList.remove("hidden");
       document.getElementById("click-count").textContent = data.total_clicks;
-    
+      document.getElementById("expires-at").textContent = data.expires_at || "Never";
+
+      const qrImg = document.getElementById("stats-qr");
+      const qrUrl = `/qr/${slug}`;
+      qrImg.src = qrUrl;
+      qrImg.style.display = "block";
+
+      const downloadLink = document.getElementById("download-qr");
+      downloadLink.href = qrUrl;
+
     }
-    </script>
+
+  </script>
 
 </body>
 
