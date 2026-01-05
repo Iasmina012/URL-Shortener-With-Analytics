@@ -10,6 +10,7 @@ dependencies = [
  "chrono",
  "dirs",
  "image",
+ "once_cell",
  "qrcode",
  "rand 0.8.5",
  "serde",

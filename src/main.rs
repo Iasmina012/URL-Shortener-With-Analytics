@@ -1,13 +1,12 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
-use std::{thread, time::Duration};
+use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex};
 use webbrowser;
 use sqlx::SqlitePool;
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng, distributions::Alphanumeric};
 use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
-use std::io::Cursor;
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Utc};
+use once_cell::sync::Lazy;
 
 mod database;
 use database::{init_db, insert_url, get_url, record_click, get_click_stats};
