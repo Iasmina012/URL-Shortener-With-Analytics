@@ -12,6 +12,29 @@ mod database;
 use database::{init_db, insert_url, get_url, record_click, get_click_stats};
 //use database::{reset_db};
 
+static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+const MAX_REQUESTS: usize = 30;
+const WINDOW_SECONDS: i64 = 60;
+
+fn check_rate_limit(ip: &str) -> bool {
+
+    let now = Utc::now().timestamp();
+
+    let mut map = RATE_LIMITER.lock().unwrap();
+    let entries = map.entry(ip.to_string()).or_insert(Vec::new());
+
+    //delete old requests
+    entries.retain(|&t| now - t < WINDOW_SECONDS);
+
+    if entries.len() >= MAX_REQUESTS {
+        return false;
+    }
+
+    entries.push(now);
+    true
+
+}
+
 #[get("/")]
 async fn index() -> impl Responder {
 
