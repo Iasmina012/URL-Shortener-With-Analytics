@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex};
 use webbrowser;
-use sqlx::{SqlitePool, Row};
+use sqlx::{SqlitePool};
 use rand::{thread_rng, Rng, distributions::Alphanumeric};
 use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
