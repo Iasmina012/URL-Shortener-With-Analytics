@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex};
 use webbrowser;
-use sqlx::SqlitePool;
+use sqlx::{SqlitePool, Row};
 use rand::{thread_rng, Rng, distributions::Alphanumeric};
 use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
@@ -13,7 +13,7 @@ use database::{init_db, insert_url, get_url, record_click, get_click_stats};
 //use database::{reset_db};
 
 static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
-const MAX_REQUESTS: usize = 30;
+const MAX_REQUESTS: usize = 10;
 const WINDOW_SECONDS: i64 = 60;
 
 fn check_rate_limit(ip: &str) -> bool {
@@ -35,6 +35,20 @@ fn check_rate_limit(ip: &str) -> bool {
 
 }
 
+fn get_client_ip(req: &HttpRequest) -> String {
+
+    if let Some(forwarded) = req.headers().get("X-Forwarded-For") {
+        if let Ok(ip) = forwarded.to_str() {
+            return ip.split(',').next().unwrap_or(ip).to_string();
+        }
+    }
+
+    req.peer_addr()
+        .map(|addr| addr.ip().to_string())
+        .unwrap_or_else(|| "unknown".to_string())
+
+}
+
 #[get("/")]
 async fn index() -> impl Responder {
 
@@ -46,7 +60,15 @@ async fn index() -> impl Responder {
 } 
 
 #[post("/shorten")]
-async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>) -> impl Responder {
+async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>, req: HttpRequest) -> impl Responder {
+
+    let ip = get_client_ip(&req);
+
+    if !check_rate_limit(&ip) {
+        return HttpResponse::TooManyRequests().json(
+            serde_json::json!({ "error": "Too many requests! Please slow down."})
+        );
+    }
 
     let url = match json.get("url").and_then(|v| v.as_str()) {
         Some(u) if !u.trim().is_empty() => u.trim(),
@@ -88,6 +110,13 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
 #[get("/{slug}")]
 async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responder {
     
+    let ip = get_client_ip(&req);
+
+    if !check_rate_limit(&ip) {
+        return HttpResponse::TooManyRequests()
+            .body("Too many requests! Please slow down.");
+    }
+
     let slug = slug.into_inner();
 
     match get_url(&pool, &slug).await {
