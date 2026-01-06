@@ -7,9 +7,10 @@ use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
 use chrono::{NaiveDate, Utc};
 use once_cell::sync::Lazy;
+use serde::Deserialize;
 
 mod database;
-use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors};
+use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors, get_clicks_by_country};
 //use database::{reset_db};
 
 static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -47,6 +48,25 @@ fn get_client_ip(req: &HttpRequest) -> String {
         .map(|addr| addr.ip().to_string())
         .unwrap_or_else(|| "unknown".to_string())
 
+}
+
+async fn get_country_from_ip(ip: &str) -> Option<String> {
+
+    if ip == "unknown" || ip.starts_with("127.") {
+        return Some("Localhost".to_string());
+    }
+
+    let url = format!("http://ip-api.com/json/{}?fields=country", ip);
+    let res = reqwest::get(url).await.ok()?;
+    let geo: GeoResponse = res.json().await.ok()?;
+
+    geo.country
+
+}
+
+#[derive(Deserialize)]
+struct GeoResponse {
+    country: Option<String>,
 }
 
 #[get("/")]
@@ -132,13 +152,14 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
             }
 
             //saves click
-            let ip = req.peer_addr().map(|a| a.ip().to_string());
+            let ip = get_client_ip(&req);
             let ua = req.headers()
                 .get("User-Agent")
                 .and_then(|v| v.to_str().ok())
                 .map(|s| s.to_string());
+            let country = get_country_from_ip(&ip).await;
 
-            //record_click(&pool, &slug, ip, ua).await;
+            record_click(&pool, &slug, Some(ip), ua, country).await;
 
             HttpResponse::Found()
                 .append_header(("Location", url))
@@ -166,17 +187,17 @@ async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Res
     }
 
     let expires_at: Option<String> = row.unwrap().get("expires_at");
-
     let clicks = get_click_stats(&pool, &slug).await;
-
     let unique_visitors = get_unique_visitors(&pool, &slug).await;
+    let geo_stats = get_clicks_by_country(&pool, &slug).await;
 
     HttpResponse::Ok().json(serde_json::json!({
         "slug": slug,
         "short_url": format!("http://localhost:8080/{}", slug),
         "expires_at": expires_at,
         "total_clicks": clicks,
-        "unique_visitors": unique_visitors
+        "unique_visitors": unique_visitors,
+        "countries": geo_stats
     }))
 
 }
@@ -228,7 +249,6 @@ async fn main() -> std::io::Result<()> {
             }
         }
     });
-   
     println!("Server running at {}", url);
 
    HttpServer::new(move || {
