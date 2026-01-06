@@ -138,7 +138,7 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
                 .and_then(|v| v.to_str().ok())
                 .map(|s| s.to_string());
 
-            record_click(&pool, &slug, ip, ua).await;
+            //record_click(&pool, &slug, ip, ua).await;
 
             HttpResponse::Found()
                 .append_header(("Location", url))

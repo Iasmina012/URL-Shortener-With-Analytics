@@ -58,12 +58,13 @@ pub async fn init_db() -> SqlitePool {
 
     //clicks table
     sqlx::query(
-        r#"
+    r#"
         CREATE TABLE IF NOT EXISTS clicks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             slug TEXT NOT NULL,
             ip TEXT,
             user_agent TEXT,
+            country TEXT,
             clicked_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         "#
@@ -78,7 +79,7 @@ pub async fn init_db() -> SqlitePool {
 }
 
 pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str, expires_at: Option<String>) -> sqlx::Result<()> {
-    
+
     sqlx::query("INSERT INTO urls (slug, url, expires_at) VALUES (?, ?, ?)")
         .bind(slug)
         .bind(url)
@@ -90,7 +91,7 @@ pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str, expires_at: Op
 }
 
 pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Option<String>)>, sqlx::Error> {
-    
+
     let row = sqlx::query("SELECT url, expires_at FROM urls WHERE slug = ?")
         .bind(slug)
         .fetch_optional(pool)
@@ -99,23 +100,22 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Op
     if let Some(r) = row {
         let url: String = r.get("url");
         let expires_at: Option<String> = r.get::<Option<String>, _>("expires_at");
-        Ok(Some((url, expires_at)))
+        Ok(Some((url, expires_at))) //if found
     } else {
         Ok(None)
     }
 
-    //returns Ok(Some((url, expires_at_opt))) if found
-
 }
 
-pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua: Option<String>) {
+pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua: Option<String>, country: Option<String>) {
     
-    let _ = sqlx::query("INSERT INTO clicks (slug, ip, user_agent) VALUES (?, ?, ?)")
+    let _ = sqlx::query("INSERT INTO clicks (slug, ip, user_agent, country) VALUES (?, ?, ?, ?)")
         .bind(slug)
         .bind(ip)
         .bind(ua)
+        .bind(country)
         .execute(pool)
-        .await;
+    .await;
 
 }
 
@@ -143,9 +143,25 @@ pub async fn get_unique_visitors(pool: &SqlitePool, slug: &str) -> i64 {
 
 }
 
+pub async fn get_clicks_by_country(pool: &SqlitePool, slug: &str) -> Vec<(String, i64)> {
+
+    let rows = sqlx::query(r#"SELECT country, COUNT(*) as total FROM clicks WHERE slug = ? AND country IS NOT NULL GROUP BY country ORDER BY total DESC"#)
+        .bind(slug)
+        .fetch_all(pool)
+        .await
+        .unwrap();
+
+    rows.into_iter()
+        .map(|r| (
+            r.get::<String, _>("country"),
+            r.get::<i64, _>("total"),
+        ))
+        .collect()
+
+}
 
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
-    
+
     sqlx::query("DELETE FROM urls")
         .execute(pool)
         .await?;
