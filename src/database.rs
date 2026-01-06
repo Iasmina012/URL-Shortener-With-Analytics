@@ -90,7 +90,7 @@ pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str, expires_at: Op
 }
 
 pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Option<String>)>, sqlx::Error> {
-   
+    
     let row = sqlx::query("SELECT url, expires_at FROM urls WHERE slug = ?")
         .bind(slug)
         .fetch_optional(pool)
@@ -109,7 +109,7 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Op
 }
 
 pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua: Option<String>) {
-   
+    
     let _ = sqlx::query("INSERT INTO clicks (slug, ip, user_agent) VALUES (?, ?, ?)")
         .bind(slug)
         .bind(ip)
@@ -120,7 +120,7 @@ pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua:
 }
 
 pub async fn get_click_stats(pool: &SqlitePool, slug: &str) -> i64 {
-   
+
     let row = sqlx::query("SELECT COUNT(*) as total FROM clicks WHERE slug = ?")
         .bind(slug)
         .fetch_one(pool)
@@ -130,6 +130,19 @@ pub async fn get_click_stats(pool: &SqlitePool, slug: &str) -> i64 {
     row.get::<i64, _>("total")
 
 }
+
+pub async fn get_unique_visitors(pool: &SqlitePool, slug: &str) -> i64 {
+
+    let row = sqlx::query("SELECT COUNT(DISTINCT ip) as unique_visitors FROM clicks WHERE slug = ? AND ip IS NOT NULL")
+        .bind(slug)
+        .fetch_one(pool)
+        .await
+        .unwrap();
+
+    row.get::<i64, _>("unique_visitors")
+
+}
+
 
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
     
