@@ -1,21 +1,21 @@
 # URL-Shortener-With-Analytics
 
-The following project is written in **Rust** using **Actix-Web** and **SQLx + SQLite**, it provides both a RESTful API and a simple web interface using **HTML** and **JavaScript**.
+The following project is written in **Rust** using **Actix-Web** and **SQLx + SQLite**, it provides both a RESTful API and a simple web interface using **HTML**, **CSS** and **JavaScript**.
 
 **Status**
 
 Development in Progress...
 
-- Implemented: MVP (shorten with and without custom slug and redirect URLs), Analytics (qr code generator, expiration date, clicks), Requirements (RESTful API with endpoints for shortening, redirecting and analytics, short code generation [6-8 characters, alphanumeric], rate limiter, DB for URLs and click events)
-- Soon to be implemented: Analytics (unique visitors, geographic location), Requirements (collision detection and handling, web dashboard showing all links and statistics)
+- Implemented: MVP (shorten with and without custom slug and redirect URLs), Analytics (qr code generator, expiration date, clicks, unique visitors, geographic location), Requirements (RESTful API with endpoints for shortening, redirecting and analytics, short code generation [6-8 characters, alphanumeric], rate limiter, DB for URLs and click events)
+- Soon to be implemented: Requirements (collision detection and handling, web dashboard showing all links and statistics), Authentication, Fun Stuff(filtering, charts, slug trends)
 
 ## Description
 
 **URL Shortener with Analytics** is a full-stack Rust project that transforms long URLs into shorter, shareable URLs while collecting basic analytics. 
 
-Users can shorten links, create custom slugs, view statistics (total clicks, unique visitors, geographic location), generate QR codes, and set expiration dates.  
+Users can shorten links, create custom slugs, view different statistics (total clicks, unique visitors, geographic location), generate QR codes and set expiration dates.  
 
-The project demonstrates key backend concepts such as HTTP request handling, database management, and asynchronous programming. All of this can be found in a single, lightweight service.
+The project demonstrates key backend concepts such as HTTP request handling, database management and asynchronous programming. All of this can be found in a single, lightweight service.
 
 ### Why This Project?
 
@@ -41,23 +41,27 @@ This architecture strikes a balance between **simplicity** and **scalability**, 
 ### Components
 
 - **Web Client:**  
-  Simple HTML/JavaScript frontend used to submit URLs and display the shortened URLs and analytics.
+  Simple HTML/CSS/JavaScript frontend used to submit URLs and display the shortened URLs and analytics.
 
 - **API Layer (Actix-Web):**  
   Exposes REST endpoints for:
-  - `POST /shorten` -> Creates a short URL;
-  - `GET /{slug}` -> Redirects to the original URL using a Slug; 
-  - `GET /` -> Serves the dashboard page.
+  - `POST /shorten` -> Creates a shortened URL with an optional custom slug and expiration date;
+  - `GET /{slug}` -> Redirects to the original URL using a slug and records analytics data;
+  - `GET /stats/{slug}` → Returns analytics for a shortened URL (expiration date, clicks, unique visitors, geolocation stats);
+  - `GET /qr/{slug}` → Generates a QR code for the shortened URL;
+  - `GET /` -> Serves the web dashboard page.
+  
+  All endpoints are protected by a simple in-memory rate limiter (10 requests per minute per IP address).
 
-- **Services:**
-  - `URL Service`-> Handles the URL insertion and retrieval from the database; 
-  - `Analytics Service` -> Tracks and fetches statistics (expiration date, QR code generator, rate limiter, clicks, unique visitors, geographic location);  
-  - `QR Code Service` -> Generates QR codes for each shortened link;
-  - `Rate Limiter` -> Restricts requests per user / IP.
+- **Services (Logical Components)::**
+  - `URL Service`-> Handles URL creation, storage, retrieval and expiration validation using the database;
+  - `Analytics Service` -> Tracks and fetches statistics (expiration dates, QR code generator, clicks, unique visitors, geographic location);  
+  - `QR Code Service` -> Generates QR codes for each shortened URL;
+  - `Rate Limiter` -> Restricts the number of requests per IP address within a defined time window.
 
-- **Database (SQLx + SQLite) (so far):**
-  - `urls` table -> Stores slug and original URL;
-  - `clicks` table -> Stores click analytics data.  
+- **Database (SQLx + SQLite):**
+  - `urls` table -> Stores expiration dates, slugs and original URLs;
+  - `clicks` table -> Stores clicks' analytics data.  
 
 ## Technologies Used (so far)
 
@@ -65,8 +69,17 @@ This architecture strikes a balance between **simplicity** and **scalability**, 
 - [Actix-Web](https://actix.rs/)
 - [SQLx](https://github.com/launchbadge/sqlx)
 - [SQLite](https://sqlite.org/)
-- [rand](https://docs.rs/rand/latest/rand/)
-- [webbrowser](https://docs.rs/webbrowser/latest/webbrowser/)
+- [Rand](https://docs.rs/rand/latest/rand/)
+- [Webbrowser](https://docs.rs/webbrowser/latest/webbrowser/)
+- [Tokio](https://tokio.rs/)
+- [Serde](https://serde.rs/)
+- [Serde JSON](https://docs.rs/serde_json/)
+- [Chrono](https://docs.rs/chrono/)
+- [Reqwest](https://docs.rs/reqwest/)
+- [QR Code](https://docs.rs/qrcode/)
+- [Image](https://docs.rs/image/)
+- [Once Cell](https://docs.rs/once_cell/)
+- [Dirs](https://docs.rs/dirs/)
 
 Make sure Rust and Cargo are installed on your system. Verify using:
 
