@@ -282,6 +282,11 @@
       </div>
 
       <div class="analytics-item">
+      <label>Clicks by Country:</label>
+      <ul id="country-list"></ul>
+      </div>
+
+      <div class="analytics-item">
         <div class="analytics-item">
           <label> QR Code: </label>
           <div class="qr-row">
@@ -440,6 +445,14 @@
 
       const downloadLink = document.getElementById("download-qr");
       downloadLink.href = qrUrl;
+
+      const list = document.getElementById("country-list");
+      list.innerHTML = "";
+      data.countries.forEach(([country, count]) => {
+        const li = document.createElement("li");
+        li.textContent = `${country}: ${count}`;
+        list.appendChild(li);
+      });
 
     }
 
