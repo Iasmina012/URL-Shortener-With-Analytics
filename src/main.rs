@@ -9,7 +9,7 @@ use chrono::{NaiveDate, Utc};
 use once_cell::sync::Lazy;
 
 mod database;
-use database::{init_db, insert_url, get_url, record_click, get_click_stats};
+use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors};
 //use database::{reset_db};
 
 static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -55,9 +55,9 @@ async fn index() -> impl Responder {
     let html = include_str!("index.html");
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(html)   
+        .body(html)
 
-} 
+}
 
 #[post("/shorten")]
 async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>, req: HttpRequest) -> impl Responder {
@@ -109,7 +109,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
 
 #[get("/{slug}")]
 async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responder {
-    
+
     let ip = get_client_ip(&req);
 
     if !check_rate_limit(&ip) {
@@ -120,7 +120,7 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
     let slug = slug.into_inner();
 
     match get_url(&pool, &slug).await {
-        
+
         Ok(Some((url, expires_opt))) => {
             //checks expiration server-side
             if let Some(exp_str) = expires_opt {
@@ -152,7 +152,7 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
 
 #[get("/stats/{slug}")]
 async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Responder {
-    
+
     let slug = slug.into_inner();
 
     let row = sqlx::query("SELECT expires_at FROM urls WHERE slug = ?")
@@ -169,13 +169,16 @@ async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Res
 
     let clicks = get_click_stats(&pool, &slug).await;
 
+    let unique_visitors = get_unique_visitors(&pool, &slug).await;
+
     HttpResponse::Ok().json(serde_json::json!({
         "slug": slug,
         "short_url": format!("http://localhost:8080/{}", slug),
         "expires_at": expires_at,
-        "total_clicks": clicks
+        "total_clicks": clicks,
+        "unique_visitors": unique_visitors
     }))
-    
+
 }
 
 #[get("/qr/{slug}")]
@@ -197,7 +200,7 @@ async fn generate_qr(slug: web::Path<String>) -> impl Responder {
     HttpResponse::Ok()
         .content_type("image/png")
         .body(buffer.into_inner())
-        
+
 }
 
 #[actix_web::main]
@@ -225,7 +228,7 @@ async fn main() -> std::io::Result<()> {
             }
         }
     });
- 
+   
     println!("Server running at {}", url);
 
    HttpServer::new(move || {
