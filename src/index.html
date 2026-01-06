@@ -1,7 +1,7 @@
 <!doctype html>
 
 <html lang="en">
-    
+
 <head>
 
   <meta charset="utf-8">
@@ -24,7 +24,7 @@
       padding-top: 40px;
       padding-bottom: 40px;
       background: #f7f7f9;
-      overflow-y: auto; 
+      overflow-y: auto;
     }
 
     header {
@@ -62,13 +62,13 @@
       color: #2563eb;
       font-weight: bold;
     }
-    
+
     .container {
       display: flex;
       justify-content: center;
       padding: 40px 20px;
     }
-    
+
     .card {
       background: white;
       padding: 2rem 3rem;
@@ -125,19 +125,19 @@
       font-family: monospace;
     }
 
-    .copy-qr-btn { 
+    .copy-qr-btn {
         text-decoration: none;
-        margin-top: 6px; 
-        padding: 6px 12px; 
-        font-size: 0.9rem; 
-        border-radius: 6px; 
-        border: none; 
-        cursor: pointer; 
-        background: #2563eb; 
-        color: white; 
+        margin-top: 6px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background: #2563eb;
+        color: white;
     }
-    
-    .copy-qr-btn:hover { 
+
+    .copy-qr-btn:hover {
         background: #1e4fcf;
     }
 
@@ -147,8 +147,8 @@
         border: 1px solid #ff8080;
     }
 
-    .hidden { 
-      display: none; 
+    .hidden {
+      display: none;
     }
 
     .analytics-box {
@@ -225,11 +225,11 @@
 <div class="container">
 
   <div id="home-view" class="card">
-   
+
     <h1>URL Shortener</h1>
 
     <form id="shorten-form">
-      
+
       <label>URL to Shorten:</label>
       <input type="url" name="url" placeholder="https://example.com/rust-project" required>
 
@@ -244,11 +244,11 @@
     </form>
 
     <div id="shortened-card" class="shortened-url hidden">
-      
+
       <a id="short-url-text" href="#" target="_blank"></a>
       <button id="copy-btn" class="copy-qr-btn" onclick="copyUrl()">Copy</button>
       <button id="qr-btn" class="copy-qr-btn" onclick="generateQR()">Generate QR Code</button>
-      
+
     </div>
 
     <div id="qr-section" style="display:none; text-align:center; margin-top:15px;">
@@ -268,13 +268,17 @@
     <button onclick="loadAnalytics()">View analytics</button>
 
     <div id="analytics-result" class="analytics-box hidden">
-     
+
       <div class="analytics-item">
         <label> Expiration Date: <span id="expires-at">Never</span> </label>
       </div>
-      
+
       <div class="analytics-item">
       <label> Total Clicks: <span id="click-count">0</span> </label>
+      </div>
+
+      <div class="analytics-item">
+      <label> Unique Visitors: <span id="unique-visitors">0</span> </label>
       </div>
 
       <div class="analytics-item">
@@ -286,9 +290,9 @@
           </div>
         </div>
       </div>
-      
+
   </div>
-    
+
 </div>
 
 <script>
@@ -322,7 +326,7 @@
       homeBtn.classList.remove("active");
 
     }
-  
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -331,7 +335,7 @@
 
         shortenedCard.style.display = "none";
         shortenedCard.classList.remove("error-box");
-        copyBtn.style.display = "block"; 
+        copyBtn.style.display = "block";
 
         const formData = new FormData(form);
 
@@ -349,7 +353,7 @@
         shortenedCard.style.display = "block";
 
         if (!response.ok) {
-            
+
             //slug already exists
             shortUrlText.textContent = data.error;
             shortUrlText.removeAttribute("href");
@@ -388,7 +392,7 @@
     }
 
     async function loadAnalytics() {
-      
+
       let input = document.getElementById("analytics-slug").value.trim();
 
       if (!input) {
@@ -427,6 +431,7 @@
       document.getElementById("analytics-result").classList.remove("hidden");
       document.getElementById("click-count").textContent = data.total_clicks;
       document.getElementById("expires-at").textContent = data.expires_at || "Never";
+      document.getElementById("unique-visitors").textContent = data.unique_visitors;
 
       const qrImg = document.getElementById("stats-qr");
       const qrUrl = `/qr/${slug}`;
