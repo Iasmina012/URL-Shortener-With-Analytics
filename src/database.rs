@@ -188,14 +188,13 @@ pub async fn get_clicks_by_country(pool: &SqlitePool, slug: &str) -> Vec<(String
 
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
 
-    sqlx::query("DELETE FROM urls")
-        .execute(pool)
-        .await?;
-
+    sqlx::query("DELETE FROM urls").execute(pool).await?;
     //reset contor = 1
-    sqlx::query("DELETE FROM sqlite_sequence WHERE name='urls'")
-        .execute(pool)
-        .await?;
+    sqlx::query("DELETE FROM sqlite_sequence WHERE name='urls'").execute(pool).await?;
+
+    sqlx::query("DELETE FROM clicks").execute(pool).await?;
+    //reset contor = 1
+    sqlx::query("DELETE FROM sqlite_sequence WHERE name='clicks'").execute(pool).await?;
 
     println!("Database reset successfully: all entries removed and IDs reset.");
     Ok(())
