@@ -17,6 +17,39 @@ static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex
 const MAX_REQUESTS: usize = 10;
 const WINDOW_SECONDS: i64 = 60;
 
+async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at: Option<String>,) -> Result<String, sqlx::Error> {
+    
+    const MAX_RETRIES: usize = 5;
+
+    for _ in 0..MAX_RETRIES {
+
+        let slug = generate_random_slug(6);
+
+        match insert_url(pool, &slug, url, expires_at.clone()).await {
+            Ok(_) => return Ok(slug),
+            Err(e) => {
+                let msg = e.to_string();
+                if msg.contains("UNIQUE") || msg.contains("unique") {
+                    //collision => retry
+                    continue;
+                } else {
+                    return Err(e);
+                }
+            }
+        }
+
+    }
+
+    Err(sqlx::Error::Protocol("Failed to generate unique slug after retries.".into(),))
+
+}
+
+fn generate_random_slug(len: usize) -> String {
+    
+    thread_rng().sample_iter(&Alphanumeric).take(len).map(char::from).collect()
+
+}
+
 fn check_rate_limit(ip: &str) -> bool {
 
     let now = Utc::now().timestamp();
@@ -92,37 +125,56 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
 
     let url = match json.get("url").and_then(|v| v.as_str()) {
         Some(u) if !u.trim().is_empty() => u.trim(),
-        _ => return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Missing or invalid 'url' field" })),
+        _ => return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Missing or invalid 'url' field." })),
     };
 
     let optional_slug = json.get("slug").and_then(|v| v.as_str()).map(|s| s.trim()).filter(|s| !s.is_empty());
-
-    let final_slug = match optional_slug {
-        Some(s) => s.to_string(),
-        None => thread_rng().sample_iter(&Alphanumeric).take(6).map(char::from).collect()
-    };
 
     let expires_optional = json.get("expires").and_then(|v| v.as_str()).map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
 
     if let Some(ref ex) = expires_optional {
         if NaiveDate::parse_from_str(ex, "%Y-%m-%d").is_err() {
-            return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Invalid date format for 'expires'. Use YYYY-MM-DD" }));
+            return HttpResponse::BadRequest().json(serde_json::json!({ "error": "Invalid date format for 'expires'. Use YYYY-MM-DD!" }));
         }
     }
 
-    match insert_url(&pool, &final_slug, url, expires_optional.clone()).await {
-        Ok(_) => HttpResponse::Ok().json(serde_json::json!({
-            "short_url": format!("http://localhost:8080/{}", final_slug),
-            "expires": expires_optional
-        })),
-        Err(e) => {
-            let msg = format!("{}", e);
-            if msg.contains("UNIQUE") || msg.contains("unique") {
-                HttpResponse::BadRequest().json(serde_json::json!({ "error": "Slug already exists!" }))
-            } else {
-                HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Database error" }))
+    match optional_slug {
+
+        //slug custom => no retry
+        Some(custom_slug) => {
+            match insert_url(&pool, custom_slug, url, expires_optional.clone()).await {
+                Ok(_) => HttpResponse::Ok().json(serde_json::json!({
+                    "short_url": format!("http://localhost:8080/{}", custom_slug),
+                    "expires": expires_optional
+                })),
+                Err(e) => {
+                    let msg = e.to_string();
+                    if msg.contains("UNIQUE") || msg.contains("unique") {
+                        HttpResponse::BadRequest().json(
+                            serde_json::json!({ "error": "Slug already exists!" })
+                        )
+                    } else {
+                        HttpResponse::InternalServerError().json(
+                            serde_json::json!({ "error": "Database error." })
+                        )
+                    }
+                }
             }
         }
+
+        //slug random => collision handling
+        None => {
+            match insert_with_collision_handling(&pool, url, expires_optional.clone()).await {
+                Ok(slug) => HttpResponse::Ok().json(serde_json::json!({
+                    "short_url": format!("http://localhost:8080/{}", slug),
+                    "expires": expires_optional
+                })),
+                Err(_) => HttpResponse::InternalServerError().json(
+                    serde_json::json!({ "error": "Failed to generate unique short URL." })
+                ),
+            }
+        }
+
     }
 
 }
@@ -146,7 +198,7 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
             if let Some(exp_str) = expires_opt {
                 if let Ok(exp_date) = NaiveDate::parse_from_str(&exp_str, "%Y-%m-%d") {
                     if exp_date < chrono::Utc::now().date_naive() {
-                        return HttpResponse::Gone().body("This link has expired");
+                        return HttpResponse::Gone().body("This link has expired!");
                     }
                 }
             }
@@ -165,8 +217,8 @@ async fn redirect(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: Htt
                 .append_header(("Location", url))
                 .finish()
         }
-        Ok(None) => HttpResponse::NotFound().body("Short URL not found"),
-        Err(_) => HttpResponse::InternalServerError().body("Database error"),
+        Ok(None) => HttpResponse::NotFound().body("Short URL not found."),
+        Err(_) => HttpResponse::InternalServerError().body("Database error."),
     }
 
 }
@@ -183,7 +235,7 @@ async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Res
         .unwrap();
 
     if row.is_none() {
-        return HttpResponse::NotFound().json(serde_json::json!({ "error": "Link not found" }));
+        return HttpResponse::NotFound().json(serde_json::json!({ "error": "Link not found." }));
     }
 
     let expires_at: Option<String> = row.unwrap().get("expires_at");
