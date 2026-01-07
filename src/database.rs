@@ -33,13 +33,20 @@ pub async fn init_db() -> SqlitePool {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             slug TEXT UNIQUE NOT NULL,
             url TEXT NOT NULL,
-            expires_at TEXT
+            expires_at TEXT,
+            user_id TEXT NOT NULL
         );
         "#
     )
     .execute(&pool)
     .await
     .expect("Failed to create table");
+    
+    //backward compatibility
+    let columns = sqlx::query("PRAGMA table_info(urls);")
+        .fetch_all(&pool)
+        .await
+        .unwrap();
 
     //ensure column exists for older DBs (that didn't have expires_at before)
     let has_expires = sqlx::query("PRAGMA table_info(urls);")
@@ -48,10 +55,16 @@ pub async fn init_db() -> SqlitePool {
         .expect("Failed to read table info")
         .into_iter()
         .any(|r| r.get::<String, _>("name") == "expires_at");
-
     if !has_expires {
         //add column if it does not exist
         let _ = sqlx::query("ALTER TABLE urls ADD COLUMN expires_at TEXT;")
+            .execute(&pool)
+            .await;
+    }
+
+    let has_user_id = columns.iter().any(|c| c.get::<String, _>("name") == "user_id");
+    if !has_user_id {
+        let _ = sqlx::query("ALTER TABLE urls ADD COLUMN user_id TEXT NOT NULL DEFAULT 'legacy';")
             .execute(&pool)
             .await;
     }
@@ -78,12 +91,13 @@ pub async fn init_db() -> SqlitePool {
 
 }
 
-pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str, expires_at: Option<String>) -> sqlx::Result<()> {
+pub async fn insert_url(pool: &SqlitePool, slug: &str, url: &str, expires_at: Option<String>, user_id: &str,) -> sqlx::Result<()> {
 
-    sqlx::query("INSERT INTO urls (slug, url, expires_at) VALUES (?, ?, ?)")
+    sqlx::query("INSERT INTO urls (slug, url, expires_at, user_id) VALUES (?, ?, ?, ?)")
         .bind(slug)
         .bind(url)
         .bind(expires_at)
+        .bind(user_id)
         .execute(pool)
         .await?;
     Ok(())
@@ -104,6 +118,18 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Op
     } else {
         Ok(None)
     }
+
+}
+
+pub async fn get_url_owned_by_user(pool: &SqlitePool, slug: &str, user_id: &str,) -> Result<bool, sqlx::Error> {
+    
+    let row = sqlx::query("SELECT 1 FROM urls WHERE slug = ? AND user_id = ?")
+        .bind(slug)
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?;
+
+    Ok(row.is_some())
 
 }
 

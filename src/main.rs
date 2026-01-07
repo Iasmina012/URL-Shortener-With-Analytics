@@ -13,11 +13,14 @@ mod database;
 use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors, get_clicks_by_country};
 //use database::{reset_db};
 
+mod authentication;
+use crate::authentication::verify_firebase_token;
+
 static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 const MAX_REQUESTS: usize = 10;
 const WINDOW_SECONDS: i64 = 60;
 
-async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at: Option<String>,) -> Result<String, sqlx::Error> {
+async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at: Option<String>, user_id: &str) -> Result<String, sqlx::Error> {
     
     const MAX_RETRIES: usize = 5;
 
@@ -25,7 +28,7 @@ async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at
 
         let slug = generate_random_slug(6);
 
-        match insert_url(pool, &slug, url, expires_at.clone()).await {
+        match insert_url(pool, &slug, url, expires_at.clone(), &user_id).await {
             Ok(_) => return Ok(slug),
             Err(e) => {
                 let msg = e.to_string();
@@ -115,6 +118,12 @@ async fn index() -> impl Responder {
 #[post("/shorten")]
 async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>, req: HttpRequest) -> impl Responder {
 
+
+    let user_id = match verify_firebase_token(&req).await {
+        Ok(uid) => uid,
+        Err(resp) => return resp,
+    };
+    
     let ip = get_client_ip(&req);
 
     if !check_rate_limit(&ip) {
@@ -142,7 +151,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
 
         //slug custom => no retry
         Some(custom_slug) => {
-            match insert_url(&pool, custom_slug, url, expires_optional.clone()).await {
+            match insert_url(&pool, custom_slug, url, expires_optional.clone(), &user_id).await {
                 Ok(_) => HttpResponse::Ok().json(serde_json::json!({
                     "short_url": format!("http://localhost:8080/{}", custom_slug),
                     "expires": expires_optional
@@ -164,7 +173,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
 
         //slug random => collision handling
         None => {
-            match insert_with_collision_handling(&pool, url, expires_optional.clone()).await {
+            match insert_with_collision_handling(&pool, url, expires_optional.clone(), &user_id).await {
                 Ok(slug) => HttpResponse::Ok().json(serde_json::json!({
                     "short_url": format!("http://localhost:8080/{}", slug),
                     "expires": expires_optional
