@@ -121,18 +121,6 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Op
 
 }
 
-pub async fn get_url_owned_by_user(pool: &SqlitePool, slug: &str, user_id: &str,) -> Result<bool, sqlx::Error> {
-    
-    let row = sqlx::query("SELECT 1 FROM urls WHERE slug = ? AND user_id = ?")
-        .bind(slug)
-        .bind(user_id)
-        .fetch_optional(pool)
-        .await?;
-
-    Ok(row.is_some())
-
-}
-
 pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua: Option<String>, country: Option<String>) {
     
     let _ = sqlx::query("INSERT INTO clicks (slug, ip, user_agent, country) VALUES (?, ?, ?, ?)")
@@ -184,6 +172,22 @@ pub async fn get_clicks_by_country(pool: &SqlitePool, slug: &str) -> Vec<(String
         ))
         .collect()
 
+}
+
+pub async fn get_urls_by_user(pool: &SqlitePool, user_id: &str) -> Result<Vec<(String, String, Option<String>)>, sqlx::Error> {
+
+   let rows = sqlx::query("SELECT slug, url, expires_at FROM urls WHERE user_id = ?ORDER BY id DESC").bind(user_id).fetch_all(pool).await?;
+
+    let mut out = Vec::new();
+    for r in rows {
+        out.push((
+            r.get("slug"),
+            r.get("url"),
+            r.get::<Option<String>, _>("expires_at"),
+        ));
+    }
+
+    Ok(out)
 }
 
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {

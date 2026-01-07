@@ -285,15 +285,45 @@ async fn generate_qr(slug: web::Path<String>) -> impl Responder {
 
 }
 
+#[get("/my_urls")]
+async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responder {
+
+    let user_id = match verify_firebase_token(&req).await {
+        Ok(uid) => uid,
+        Err(_) => {
+            return HttpResponse::Unauthorized()
+                .json(serde_json::json!({ "error": "Unauthorized" }));
+        }
+    };
+
+    match database::get_urls_by_user(pool.as_ref(), &user_id).await {
+        Ok(rows) => {
+            let results: Vec<_> = rows
+                .into_iter()
+                .map(|(slug, url, expires)| {
+                    serde_json::json!({
+                        "slug": slug,
+                        "short_url": format!("http://localhost:8080/{}", slug),
+                        "expires": expires
+                    })
+                })
+                .collect();
+
+            HttpResponse::Ok().json(results)
+        }
+        Err(_) => HttpResponse::InternalServerError()
+            .json(serde_json::json!({ "error": "Database error" })),
+    }
+    
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
     let pool = init_db().await;
 
     //when you need to reset db
-     //reset_db(&pool)
-        //.await
-        //.expect("Failed to reset database");
+    //reset_db(&pool).await.expect("Failed to reset database");
 
     let host = "127.0.0.1";
     let port = 8080;
@@ -320,6 +350,7 @@ async fn main() -> std::io::Result<()> {
             .service(redirect)
             .service(generate_qr)
             .service(stats)
+            .service(my_urls)
     })
     .bind((host, port))?
     .run()
