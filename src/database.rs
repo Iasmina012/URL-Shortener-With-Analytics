@@ -194,6 +194,23 @@ pub async fn get_urls_by_user(pool: &SqlitePool, user_id: &str) -> Result<Vec<(S
 
 }
 
+pub async fn delete_url(pool: &SqlitePool, slug: &str, user_id: &str) -> sqlx::Result<bool> {
+    
+    let res = sqlx::query("DELETE FROM urls WHERE slug = ? AND user_id = ?")
+        .bind(slug)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
+    let _ = sqlx::query("DELETE FROM clicks WHERE slug = ?")
+        .bind(slug)
+        .execute(pool)
+        .await;
+
+    Ok(res.rows_affected() > 0)
+    
+}
+
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
 
     sqlx::query("DELETE FROM urls").execute(pool).await?;
