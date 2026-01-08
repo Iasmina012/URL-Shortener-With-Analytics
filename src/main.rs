@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
+use actix_web::{get, post, delete, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex};
 use webbrowser;
 use sqlx::{SqlitePool, Row};
@@ -10,7 +10,7 @@ use once_cell::sync::Lazy;
 use serde::Deserialize;
 
 mod database;
-use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors, get_clicks_by_country};
+use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors, get_clicks_by_country, delete_url};
 //use database::{reset_db};
 
 mod authentication;
@@ -317,6 +317,24 @@ async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responde
     
 }
 
+#[delete("/url/{slug}")]
+async fn delete_url_handler(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responder {
+   
+    let user_id = match verify_firebase_token(&req).await {
+        Ok(uid) => uid,
+        Err(resp) => return resp,
+    };
+
+    let slug = slug.into_inner();
+
+    match database::delete_url(pool.as_ref(), &slug, &user_id).await {
+        Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "success": true })),
+        Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Not found or not your link" })),
+        Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Database error" })),
+    }
+
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -351,6 +369,7 @@ async fn main() -> std::io::Result<()> {
             .service(generate_qr)
             .service(stats)
             .service(my_urls)
+            .service(delete_url_handler)
     })
     .bind((host, port))?
     .run()
