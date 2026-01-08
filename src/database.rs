@@ -175,8 +175,11 @@ pub async fn get_clicks_by_country(pool: &SqlitePool, slug: &str) -> Vec<(String
 }
 
 pub async fn get_urls_by_user(pool: &SqlitePool, user_id: &str) -> Result<Vec<(String, String, Option<String>)>, sqlx::Error> {
-
-   let rows = sqlx::query("SELECT slug, url, expires_at FROM urls WHERE user_id = ?ORDER BY id DESC").bind(user_id).fetch_all(pool).await?;
+    
+    let rows = sqlx::query("SELECT slug, url, expires_at FROM urls WHERE user_id = ? ORDER BY id DESC")
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
 
     let mut out = Vec::new();
     for r in rows {
@@ -188,6 +191,7 @@ pub async fn get_urls_by_user(pool: &SqlitePool, user_id: &str) -> Result<Vec<(S
     }
 
     Ok(out)
+
 }
 
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
