@@ -365,11 +365,11 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .service(index)
             .service(shorten)
-            .service(redirect)
             .service(generate_qr)
             .service(stats)
             .service(my_urls)
             .service(delete_url_handler)
+            .service(redirect)
     })
     .bind((host, port))?
     .run()
