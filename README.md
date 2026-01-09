@@ -1,35 +1,43 @@
 # URL-Shortener-With-Analytics
 
-The following project is written in **Rust** using **Actix-Web** and **SQLx + SQLite**, it provides both a RESTful API and a simple web interface using **HTML**, **CSS** and **JavaScript**.
+The following project is written in **Rust** using **Actix-Web** and **SQLx + SQLite**. It provides both a RESTful API and a simple web interface using **HTML**, **CSS** and **JavaScript**. The user authentication process is handled through **Firebase**.
 
 **Status**
 
 Development in Progress...
 
-- Implemented: MVP (shorten with and without custom slug and redirect URLs), Analytics (qr code generator, expiration date, clicks, unique visitors, geographic location), Requirements (RESTful API with endpoints for shortening, redirecting and analytics, short code generation [6-8 characters, alphanumeric], rate limiter, DB for URLs and click events, collision detection and handling, web dashboard showing all links and statistics), Authentication
-- Soon to be implemented: Fun Stuff (filtering, charts, slug trends)
+- `MVP` (shorten URLs with/without custom slug and redirect them);
+- `Analytics` (QR code generator, expiration date, clicks, unique visitors, geographic location);
+- `Requirements` (RESTful API with endpoints for shortening, redirecting and analytics, short code generation [6-8 characters, alphanumeric], rate limiter, DB for URLs and click events, collision detection and handling, web dashboard showing all URLs and statistics);
+- `Authentication`
+- `Filtering` -> **coming soon**
 
 ## Description
 
-**URL Shortener with Analytics** is a full-stack Rust project that transforms long URLs into shorter, shareable URLs while collecting basic analytics. 
+**URL Shortener with Analytics** is a full-stack web application written in Rust that transforms long URLs into short, easy to share URLs while collecting and providing different analytics.
 
-Users can shorten links, create custom slugs, view different statistics (total clicks, unique visitors, geographic location), generate QR codes and set expiration dates.  
+Authenticated users can create shorter URLs with optional custom slugs and expiration dates, view and manage all their previously created URLs and access per-URL analytics such as total clicks, unique visitors and geographic distribution of visitors. Each shortened URL also supports automatic QR code generation, which can be previewed and downloaded directly from the interface.
 
-The project demonstrates key backend concepts such as HTTP request handling, database management and asynchronous programming. All of this can be found in a single, lightweight service.
+The application includes a complete URL management system where users can view all of their generated URLs in a dashboard, inspect statistics for each one on demand and delete URLs when they are no longer needed. In addition, a dedicated Trends tab provides a global overview of URLs' performance, allowing users to explore trends across all URLs such as search by slug, filter popular URLs based on visitors and clicks activity, sort results by slug, expiration date or number of clicks and visitors.
+
+The project demonstrates key backend concepts such as RESTful API design, authentication using Firebase, HTTP request handling, rate limiting, collision detection and handling, database management and asynchronous programming. Analytics collection and retrieval are handled asynchronously to ensure performance and scalability. All of this can be found in a single, lightweight service.
 
 ### Why This Project?
 
 URL Shorteners with Analytics address many real-world engineering challenges:
-- Preventing slug collisions;  
-- Handling high traffic efficiently;  
-- Ensuring database integrity and security;  
-- Presenting analytics data clearly.  
-
-It’s a complete **end-to-end web service** built entirely with Rust.
+- Integrating a frontend interface with a RESTful backend in a clean architecture;
+- Implementing authentication and authorization to protect user resources;
+- Ensuring database integrity, consistency and security;
+- Preventing slug collisions while maintaining short, readable URLs;
+- Protecting the service from abuse using rate limiting mechanisms;
+- Handling high traffic efficiently and safely through asynchronous request processing;
+- Designing and collecting analytics data such as click events, unique visitors and geographic distribution;
+- Presenting analytics data clearly and intuitively through a web dashboard;
+- Managing URLs lifecycle through deletion.
 
 ## System Architecture
 
-The chosen architecture follows a **modular**, **layered design** that separates concerns between the web interface, API logic, database layer, and storage.  
+The chosen architecture follows a **modular**, **layered design** that separates concerns between the web interface, API logic, database layer, and storage.
 This makes the project easier to understand, extend, and maintain.
 
 This architecture strikes a balance between **simplicity** and **scalability**, making it ideal for small to medium web services, educational projects, or prototypes that could later evolve into production grade systems.
@@ -40,46 +48,57 @@ This architecture strikes a balance between **simplicity** and **scalability**, 
 
 ### Components
 
-- **Web Client:**  
+- **Web Client:**
   Simple HTML/CSS/JavaScript frontend used to submit URLs and display the shortened URLs and analytics.
 
-- **API Layer (Actix-Web):**  
+- **API Layer (Actix-Web):**
   Exposes REST endpoints for:
-  - `POST /shorten` -> Creates a shortened URL with an optional custom slug and expiration date;
+  - `POST /shorten` -> Creates a shortened URL with an optional custom slug and expiration date (random slugs retried up to 5 times);
   - `GET /{slug}` -> Redirects to the original URL using a slug and records analytics data;
-  - `GET /stats/{slug}` → Returns analytics for a shortened URL (expiration date, clicks, unique visitors, geolocation stats);
-  - `GET /qr/{slug}` → Generates a QR code for the shortened URL;
+  - `GET /stats/{slug}` -> Returns analytics for a shortened URL (expiration date, clicks, unique visitors, geolocation stats);
+  - `GET /qr/{slug}` -> Generates a QR code for the shortened URL;
+  - `GET /my_urls` -> Returns user's URLs (requires Firebase authentication);
+  - `DELETE /url/{slug}` -> Deletes URLs (requires ownership and authentication)
   - `GET /` -> Serves the web dashboard page.
-  
+
   All endpoints are protected by a simple in-memory rate limiter (10 requests per minute per IP address).
 
 - **Services (Logical Components)::**
   - `URL Service`-> Handles URL creation, storage, retrieval and expiration validation using the database;
-  - `Analytics Service` -> Tracks and fetches statistics (expiration dates, QR code generator, clicks, unique visitors, geographic location);  
+  - `Analytics Service` -> Tracks and fetches statistics (expiration dates, QR code generator, clicks, unique visitors, geographic location);
   - `QR Code Service` -> Generates QR codes for each shortened URL;
   - `Rate Limiter` -> Restricts the number of requests per IP address within a defined time window.
 
 - **Database (SQLx + SQLite):**
   - `urls` table -> Stores expiration dates, slugs and original URLs;
-  - `clicks` table -> Stores clicks' analytics data.  
+  - `clicks` table -> Stores clicks' analytics data.
 
-## Technologies Used (so far)
+## Technologies Used
 
-- [Rust](https://www.rust-lang.org/)
-- [Actix-Web](https://actix.rs/)
-- [SQLx](https://github.com/launchbadge/sqlx)
-- [SQLite](https://sqlite.org/)
-- [Rand](https://docs.rs/rand/latest/rand/)
-- [Webbrowser](https://docs.rs/webbrowser/latest/webbrowser/)
-- [Tokio](https://tokio.rs/)
-- [Serde](https://serde.rs/)
-- [Serde JSON](https://docs.rs/serde_json/)
-- [Chrono](https://docs.rs/chrono/)
-- [Reqwest](https://docs.rs/reqwest/)
-- [QR Code](https://docs.rs/qrcode/)
-- [Image](https://docs.rs/image/)
-- [Once Cell](https://docs.rs/once_cell/)
-- [Dirs](https://docs.rs/dirs/)
+- [Rust](https://www.rust-lang.org/) – programming language
+- [Actix-Web](https://actix.rs/) – high performance asynchronous web framework
+- [Tokio](https://tokio.rs/) – asynchronous runtime for Rust
+
+- [SQLx](https://github.com/launchbadge/sqlx) – async, compile-time checked SQL toolkit
+- [SQLite](https://sqlite.org/) – lightweight embedded database
+- [Dirs](https://docs.rs/dirs/) – access to platform specific standard directories
+
+- [JSON Web Token](https://docs.rs/jsonwebtoken/) – JWT based authentication and authorization
+- [Reqwest](https://docs.rs/reqwest/) – async HTTP client
+- [Webbrowser](https://docs.rs/webbrowser/latest/webbrowser/) – open URLs in the system default browser
+
+- [Serde](https://serde.rs/) – serialization and deserialization framework
+- [Serde JSON](https://docs.rs/serde_json/) – JSON support for Serde
+- [Once Cell](https://docs.rs/once_cell/) - lazy static initialization
+
+- [Chrono](https://docs.rs/chrono/) – date and time handling
+
+- [Rand](https://docs.rs/rand/latest/rand/) – random data generation
+
+- [QR Code](https://docs.rs/qrcode/) – QR code generation
+- [Image](https://docs.rs/image/) – image processing and encoding
+
+## Installation
 
 Make sure Rust and Cargo are installed on your system. Verify using:
 
@@ -98,15 +117,42 @@ brew install imagemagick
 cargo new Proiect_ATAD --bin
 ```
 
-## Installation
-
 ### 1. Cloning the Project
+
+Open your terminal and run the command below:
 
 ```bash
 git clone https://github.com/Iasmina012/URL-Shortener-With-Analytics
 ```
 
-### 2. Running the Project
+### 2. Setting up Firebase Authentication
+
+This project uses **Firebase Authentication (Email/Password)** for user authentication. To run the project locally, you must configure your own Firebase project.
+
+#### 1. Create a Firebase Project
+- Go to the [Firebase Console](https://console.firebase.google.com/)
+- Create a new project
+
+#### 2. Enable Email/Password Authentication
+- In the Firebase Console, navigate to **Authentication -> Sign-in method**
+- Enable **Email/Password**
+
+#### 3. Add a Web Application
+- In **Project Settings -> General**, add a new **Web Application**
+- Copy the Firebase configuration object
+
+#### 4. Configure the Frontend
+Replace the Firebase configuration in `index.html` with your own values:
+
+```js
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+};
+```
+
+### 3. Running the Project
 
 ```bash
 cd <repository_name>
