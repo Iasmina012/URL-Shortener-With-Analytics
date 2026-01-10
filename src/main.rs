@@ -1,5 +1,5 @@
 use actix_web::{get, post, delete, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
-use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex};
+use std::{thread, time::Duration, io::Cursor, collections::HashMap, sync::Mutex, env};
 use webbrowser;
 use sqlx::{SqlitePool, Row};
 use rand::{thread_rng, Rng, distributions::Alphanumeric};
@@ -19,6 +19,7 @@ use crate::authentication::verify_firebase_token;
 static RATE_LIMITER: Lazy<Mutex<HashMap<String, Vec<i64>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 const MAX_REQUESTS: usize = 10;
 const WINDOW_SECONDS: i64 = 60;
+static BASE_URL: Lazy<String> = Lazy::new(|| {env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:8080".to_string())});
 
 async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at: Option<String>, user_id: &str) -> Result<String, sqlx::Error> {
 
@@ -88,10 +89,17 @@ fn get_client_ip(req: &HttpRequest) -> String {
 
 async fn get_country_from_ip(ip: &str) -> Option<String> {
 
-    if ip == "unknown" || ip.starts_with("127.") {
-        return Some("Localhost".to_string());
+    //unknown IPs (unknown)
+    if ip == "unknown" {
+        return Some("Unknown".to_string());
     }
 
+    //private IPs (fallback or local)
+    if ip.starts_with("127.") || ip.starts_with("10.") || ip.starts_with("192.168.") {
+        return Some("Local".to_string());
+    }
+
+    //public IPs (ip-api.com)
     let url = format!("http://ip-api.com/json/{}?fields=country", ip);
     let res = reqwest::get(url).await.ok()?;
     let geo: GeoResponse = res.json().await.ok()?;
@@ -153,7 +161,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
         Some(custom_slug) => {
             match insert_url(&pool, custom_slug, url, expires_optional.clone(), &user_id).await {
                 Ok(_) => HttpResponse::Ok().json(serde_json::json!({
-                    "short_url": format!("http://localhost:8080/{}", custom_slug),
+                    "short_url": format!("{}/{}", BASE_URL.as_str(), custom_slug),
                     "expires": expires_optional
                 })),
                 Err(e) => {
@@ -175,7 +183,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
         None => {
             match insert_with_collision_handling(&pool, url, expires_optional.clone(), &user_id).await {
                 Ok(slug) => HttpResponse::Ok().json(serde_json::json!({
-                    "short_url": format!("http://localhost:8080/{}", slug),
+                    "short_url": format!("{}/{}", BASE_URL.as_str(), slug),
                     "expires": expires_optional
                 })),
                 Err(_) => HttpResponse::InternalServerError().json(
@@ -254,7 +262,7 @@ async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Res
 
     HttpResponse::Ok().json(serde_json::json!({
         "slug": slug,
-        "short_url": format!("http://localhost:8080/{}", slug),
+        "short_url": format!("{}/{}", BASE_URL.as_str(), slug),
         "expires_at": expires_at,
         "total_clicks": clicks,
         "unique_visitors": unique_visitors,
@@ -266,7 +274,7 @@ async fn stats(slug: web::Path<String>, pool: web::Data<SqlitePool>) -> impl Res
 #[get("/qr/{slug}")]
 async fn generate_qr(slug: web::Path<String>) -> impl Responder {
 
-    let short_url = format!("http://localhost:8080/{}", slug);
+    let short_url = format!("{}/{}", BASE_URL.as_str(), slug);
 
     let code = QrCode::new(short_url.as_bytes()).unwrap();
 
@@ -303,7 +311,7 @@ async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responde
                 .map(|(slug, url, expires)| {
                     serde_json::json!({
                         "slug": slug,
-                        "short_url": format!("http://localhost:8080/{}", slug),
+                        "short_url": format!("{}/{}", BASE_URL.as_str(), slug),
                         "url": url,
                         "expires": expires
                     })
@@ -374,7 +382,7 @@ async fn trends(pool: web::Data<SqlitePool>, web::Query(q): web::Query<TrendsQue
         Ok(rows) => {
             let data: Vec<TrendRow> = rows.into_iter().map(|(slug, url, exp, total, unique)| {
                 TrendRow {
-                    short_url: format!("http://localhost:8080/{}", slug),
+                    short_url: format!("{}/{}", BASE_URL.as_str(), slug),
                     slug,
                     url,
                     expires_at: exp,
