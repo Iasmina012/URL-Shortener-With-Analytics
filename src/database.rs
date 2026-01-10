@@ -41,7 +41,7 @@ pub async fn init_db() -> SqlitePool {
     .execute(&pool)
     .await
     .expect("Failed to create table");
-    
+
     //backward compatibility
     let columns = sqlx::query("PRAGMA table_info(urls);")
         .fetch_all(&pool)
@@ -122,7 +122,7 @@ pub async fn get_url(pool: &SqlitePool, slug: &str) -> Result<Option<(String, Op
 }
 
 pub async fn record_click(pool: &SqlitePool, slug: &str, ip: Option<String>, ua: Option<String>, country: Option<String>) {
-    
+
     let _ = sqlx::query("INSERT INTO clicks (slug, ip, user_agent, country) VALUES (?, ?, ?, ?)")
         .bind(slug)
         .bind(ip)
@@ -175,7 +175,7 @@ pub async fn get_clicks_by_country(pool: &SqlitePool, slug: &str) -> Vec<(String
 }
 
 pub async fn get_urls_by_user(pool: &SqlitePool, user_id: &str) -> Result<Vec<(String, String, Option<String>)>, sqlx::Error> {
-    
+
     let rows = sqlx::query("SELECT slug, url, expires_at FROM urls WHERE user_id = ? ORDER BY id DESC")
         .bind(user_id)
         .fetch_all(pool)
@@ -195,7 +195,7 @@ pub async fn get_urls_by_user(pool: &SqlitePool, user_id: &str) -> Result<Vec<(S
 }
 
 pub async fn delete_url(pool: &SqlitePool, slug: &str, user_id: &str) -> sqlx::Result<bool> {
-    
+
     let res = sqlx::query("DELETE FROM urls WHERE slug = ? AND user_id = ?")
         .bind(slug)
         .bind(user_id)
@@ -208,7 +208,64 @@ pub async fn delete_url(pool: &SqlitePool, slug: &str, user_id: &str) -> sqlx::R
         .await;
 
     Ok(res.rows_affected() > 0)
-    
+
+}
+
+pub async fn get_trends(pool: &SqlitePool, q: Option<&str>, filter: &str, metric: &str, sort: &str, limit: i64,) -> Result<Vec<(String, String, Option<String>, i64, i64)>, sqlx::Error> {
+
+    let mut sql = String::from(
+        "SELECT
+            u.slug,
+            u.url,
+            u.expires_at,
+            COUNT(c.id)               AS total_clicks,
+            COUNT(DISTINCT c.ip)      AS unique_visitors
+         FROM urls u
+         LEFT JOIN clicks c ON u.slug = c.slug
+         WHERE (u.expires_at IS NULL OR u.expires_at >= date('now'))"
+    );
+
+    if q.is_some() {
+        sql.push_str(" AND u.slug LIKE '%' || ? || '%'");
+    }
+
+    sql.push_str(" GROUP BY u.slug ");
+
+    let order = match (filter, metric, sort) {
+        ("popular", "unique", _) => "ORDER BY unique_visitors DESC",
+        ("popular", _, _)        => "ORDER BY total_clicks DESC",
+        (_, _, "name_asc")       => "ORDER BY u.slug COLLATE NOCASE ASC",
+        (_, _, "name_desc")      => "ORDER BY u.slug COLLATE NOCASE DESC",
+        (_, _, "exp_asc")        => "ORDER BY COALESCE(u.expires_at, '9999-12-31') ASC",
+        (_, _, "exp_desc")       => "ORDER BY COALESCE(u.expires_at, '9999-12-31') DESC",
+        _                        => "ORDER BY u.id DESC",
+    };
+
+    sql.push_str(" ");
+    sql.push_str(order);
+    sql.push_str(" LIMIT ?");
+
+    let mut query = sqlx::query(&sql);
+    if let Some(s) = q {
+        query = query.bind(s);
+    }
+    query = query.bind(limit);
+
+    let rows = query.fetch_all(pool).await?;
+
+    let mut out = Vec::new();
+    for r in rows {
+        out.push((
+            r.get("slug"),
+            r.get("url"),
+            r.get("expires_at"),
+            r.get::<i64, _>("total_clicks"),
+            r.get::<i64, _>("unique_visitors"),
+        ));
+    }
+
+    Ok(out)
+
 }
 
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
