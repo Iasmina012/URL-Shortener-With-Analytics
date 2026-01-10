@@ -100,12 +100,15 @@ This architecture strikes a balance between **simplicity** and **scalability**, 
 
 ## Installation
 
-Make sure Rust and Cargo are installed on your system. Verify using:
+In order to make your local server publicly accessible, you can use [Ngrok](https://ngrok.com) to expose it. You will need to sign up for an account in order to get a free authentication token!
+
+Make sure Rust, Cargo and Ngrok are installed on your system. Verify using:
 
 ```bash
 rustc --version
 rustup --version
 cargo --version
+ngrok version
 ```
 
 If you do not have them installed, open your terminal and run these commands:
@@ -114,7 +117,9 @@ If you do not have them installed, open your terminal and run these commands:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo install cargo-edit
 brew install imagemagick
-cargo new Proiect_ATAD --bin
+brew install ngrok
+ngrok config add-authtoken token
+cargo new <project_name> --bin
 ```
 
 ### 1. Cloning the Project
@@ -154,10 +159,22 @@ const firebaseConfig = {
 
 ### 3. Running the Project
 
+Open a terminal and run Ngrok on the same port as your server:
+```bash
+ngrok http 8080
+```
+
+Ngrok will give you a public URL like:
+```bash
+Forwarding                    https://unmature-undefectively-kala.ngrok-free.dev
+```
+
+Open another terminal and run these commands:
 ```bash
 cd <repository_name>
 cargo clean
 cargo build
+export BASE_URL="https://unmature-undefectively-kala.ngrok-free.dev"
 cargo run
 ```
 
