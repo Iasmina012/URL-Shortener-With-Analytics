@@ -7,10 +7,10 @@ use qrcode::QrCode;
 use image::{Luma, ImageOutputFormat};
 use chrono::{NaiveDate, Utc};
 use once_cell::sync::Lazy;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 mod database;
-use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors, get_clicks_by_country, delete_url};
+use database::{init_db, insert_url, get_url, record_click, get_click_stats, get_unique_visitors, get_clicks_by_country, delete_url, get_trends};
 //use database::{reset_db};
 
 mod authentication;
@@ -21,7 +21,7 @@ const MAX_REQUESTS: usize = 10;
 const WINDOW_SECONDS: i64 = 60;
 
 async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at: Option<String>, user_id: &str) -> Result<String, sqlx::Error> {
-    
+
     const MAX_RETRIES: usize = 5;
 
     for _ in 0..MAX_RETRIES {
@@ -48,7 +48,7 @@ async fn insert_with_collision_handling(pool: &SqlitePool, url: &str, expires_at
 }
 
 fn generate_random_slug(len: usize) -> String {
-    
+
     thread_rng().sample_iter(&Alphanumeric).take(len).map(char::from).collect()
 
 }
@@ -123,7 +123,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
         Ok(uid) => uid,
         Err(resp) => return resp,
     };
-    
+
     let ip = get_client_ip(&req);
 
     if !check_rate_limit(&ip) {
@@ -304,6 +304,7 @@ async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responde
                     serde_json::json!({
                         "slug": slug,
                         "short_url": format!("http://localhost:8080/{}", slug),
+                        "url": url,
                         "expires": expires
                     })
                 })
@@ -314,12 +315,12 @@ async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responde
         Err(_) => HttpResponse::InternalServerError()
             .json(serde_json::json!({ "error": "Database error" })),
     }
-    
+
 }
 
 #[delete("/url/{slug}")]
 async fn delete_url_handler(slug: web::Path<String>, pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responder {
-   
+
     let user_id = match verify_firebase_token(&req).await {
         Ok(uid) => uid,
         Err(resp) => return resp,
@@ -327,10 +328,67 @@ async fn delete_url_handler(slug: web::Path<String>, pool: web::Data<SqlitePool>
 
     let slug = slug.into_inner();
 
-    match database::delete_url(pool.as_ref(), &slug, &user_id).await {
+    match delete_url(pool.as_ref(), &slug, &user_id).await {
         Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "success": true })),
         Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Not found or not your link" })),
         Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Database error" })),
+    }
+
+}
+
+#[derive(Deserialize)]
+struct TrendsQuery {
+
+    q: Option<String>,
+    filter: Option<String>, //all, popular
+    metric: Option<String>, //clicks, unique
+    sort: Option<String>,   //name_asc, name_desc, exp_asc, exp_desc
+    limit: Option<i64>,
+
+}
+
+#[derive(Serialize)]
+struct TrendRow {
+
+    slug: String,
+    short_url: String,
+    url: String,
+    expires_at: Option<String>,
+    total_clicks: i64,
+    unique_visitors: i64,
+
+}
+
+#[get("/trends")]
+async fn trends(pool: web::Data<SqlitePool>, web::Query(q): web::Query<TrendsQuery>,) -> impl Responder {
+
+    let filter = match q.filter.as_deref() {Some("popular") => "popular", _ => "all",};
+
+    let metric = match q.metric.as_deref() {Some("unique") => "unique", _ => "clicks",};
+
+    let sort = match q.sort.as_deref() {Some("name_asc") => "name_asc", Some("name_desc") => "name_desc", Some("exp_asc") => "exp_asc", Some("exp_desc") => "exp_desc", _ => "name_desc",};
+
+    let limit = q.limit.unwrap_or(200);
+
+    match get_trends(pool.as_ref(), q.q.as_deref(), filter, metric, sort, limit,).await {
+        Ok(rows) => {
+            let data: Vec<TrendRow> = rows.into_iter().map(|(slug, url, exp, total, unique)| {
+                TrendRow {
+                    short_url: format!("http://localhost:8080/{}", slug),
+                    slug,
+                    url,
+                    expires_at: exp,
+                    total_clicks: total,
+                    unique_visitors: unique,
+                }
+            }).collect();
+
+            HttpResponse::Ok().json(data)
+        }
+        Err(e) => {
+            eprintln!("trends error: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
     }
 
 }
@@ -369,6 +427,7 @@ async fn main() -> std::io::Result<()> {
             .service(stats)
             .service(my_urls)
             .service(delete_url_handler)
+            .service(trends)
             .service(redirect)
     })
     .bind((host, port))?
