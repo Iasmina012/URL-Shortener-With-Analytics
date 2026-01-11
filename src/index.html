@@ -57,17 +57,40 @@
 
     nav button {
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       cursor: pointer;
-      padding: 8px 12px;
+      padding: 8px 14px;
       color: #374151;
-      border-radius: 8px;
+      border-radius: 999px;
       font-size: 0.95rem;
+      font-weight: 500;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    nav button:hover:not(.active):not(#logoutBtn) {
+      background: #f1f5f9;
+      color: #1e293b;
+      transform: translateY(-1px);
     }
 
     nav button.active {
       color:#fff;
       background:#2563eb;
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    #logoutBtn {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+      font-weight: 600;
+    }
+
+    #logoutBtn:hover {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+      transform: translateY(-1px);
     }
 
     h1 {
@@ -234,13 +257,6 @@
 
     .ghost:hover {
       background:#f3f4f6;
-    }
-
-    #logoutBtn {
-      background:#ef4444;
-      color:white;
-      padding:8px 10px;
-      border-radius:8px;
     }
 
     .row {
