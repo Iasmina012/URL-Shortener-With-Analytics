@@ -170,7 +170,7 @@
       text-align: center;
       letter-spacing: 0.5px;
       margin-bottom: 20px;
-  }
+    }
 
     .hidden {
       display:none;
@@ -493,16 +493,14 @@
     }
 
     .trends-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      overflow-x: auto;
-      padding: 12px 0 4px 0;
+      display: grid;
+      grid-template-columns: 1fr 160px 220px;
+      gap: 12px;
+      padding: 14px;
       background: #f8fafc;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #e6edf3;
-      -webkit-overflow-scrolling: touch;
+      align-items: center;
     }
 
     .trends-controls > input,
@@ -518,7 +516,6 @@
       border: 1px solid #cbd5e1;
       background: white;
       cursor: pointer;
-      flex: 1 1 auto;
       min-width: 0;
     }
 
@@ -544,27 +541,32 @@
 
     /* Responsive */
     @media (max-width: 900px) {
-      .trends-controls > #trendSearch { flex: 100%; }
-    }
-
-    @media (max-width: 640px) {
       .trends-controls {
-        flex-wrap: wrap;
+        grid-template-columns: 1fr 1fr;
       }
 
-      .trends-controls > input#trendSearch { min-width: 100%; }
+      #trendSort {
+        grid-column: span 2;
+      }
     }
 
+    @media (max-width: 520px) {
+      .trends-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
     .stats-dropdown {
-        width: 100%;
-        padding: 12px;
-        border-radius: 12px;
-        background: #f0f4ff;
-        border: 1px solid #cbd5e1;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        animation: fadeIn 0.25s ease-out;
-        margin-top: 8px;
-        overflow: visible;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f0f4ff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      animation: fadeIn 0.25s ease-out;
+      margin-top: 8px;
+      overflow: visible;
     }
 
     .stats-dropdown div.stat-item {
@@ -576,7 +578,7 @@
       background: #ffffff;
       box-shadow: inset 0 -1px 0 rgba(0,0,0,0.03);
     }
-    
+
     .stats-dropdown ul.country-list {
       list-style: none;
       padding: 6px 0;
@@ -628,7 +630,6 @@
       background: #1d4ed8;
     }
 
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -636,36 +637,28 @@
 
     .item-left .short-link,
     .trend-left a {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 700;
-        font-size: 1.05rem;
-        color: #1e40af;
-        text-decoration: none;
-        transition: color 0.2s ease, transform 0.2s ease;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #1e40af;
+      text-decoration: none;
+      transition: color 0.2s ease, transform 0.2s ease;
     }
 
     .item-left .short-link:hover,
     .trend-left a:hover {
-        color: #2563eb;
-        text-decoration: underline;
-        transform: translateY(-1px);
+      color: #2563eb;
+      text-decoration: underline;
+      transform: translateY(-1px);
     }
 
     button {
-        font-family: 'Poppins', sans-serif;
-    }
-  
-    .scrollable-tab {
-        height: calc(100vh - 180px);
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      font-family: 'Poppins', sans-serif;
     }
 
     #appAnalytics .scrollable-tab {
-        max-height: calc(100vh - 100px);
-        overflow-y: visible;
+      max-height: calc(100vh - 100px);
+      overflow-y: visible;
     }
 
     #appAnalytics .scrollable-tab {
@@ -680,6 +673,55 @@
 
     #analyticsResult {
       margin-top: 12px;
+    }
+
+    #appTrends .scrollable-tab {
+      height: calc(100vh - 180px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    #appTrends .scrollable-tab {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    #trendsList {
+      flex: 1 1 auto;
+    }
+
+    #trendsList {
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    #trendsList::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #trendsList::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 4px;
+    }
+
+    .trends-controls > * {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .trends-controls input,
+    .trends-controls select {
+      margin-bottom: 0;
+    }
+
+    .trends-controls > input,
+    .trends-controls > select {
+      height: 44px;
+      padding: 0 12px;
     }
 
   </style>
@@ -768,7 +810,7 @@
       <div class="scrollable-tab">
         <h1>Analytics</h1>
         <label>Enter Shortened URL or Slug</label>
-        <input id="analyticsInput" type="text" placeholder="http://localhost:8080/slug or slug">
+        <input id="analyticsInput" type="text" placeholder="http://slug or slug">
         <div class="row" style="margin-top:8px;">
           <button id="analyticsBtnLoad" class="primary" type="button">View Analytics</button>
         </div>
@@ -780,7 +822,7 @@
     <div id="appTrends" class="hidden">
       <div class="scrollable-tab">
         <h1>Trends</h1>
-        <div class="row controls-row trends-controls">
+        <div class="trends-controls">
           <input id="trendSearch" type="text" placeholder="Search by slug">
           <select id="trendFilter">
             <option value="all">All</option>
@@ -802,7 +844,7 @@
       </div>
     </div>
 
-</main>
+    </main>
 
 <script type="module">
 
@@ -1067,7 +1109,7 @@
   });
 
   analyticsBtnLoad.addEventListener("click", async (e) => {
-
+    
     e.preventDefault();
     appAnalytics.classList.add("expanded");
 
@@ -1086,7 +1128,7 @@
 
       const data = await res.json();
 
-      //xlear & show analytics result
+      //clear & show analytics result
       analyticsResult.innerHTML = "";
       analyticsResult.classList.remove("hidden");
 
@@ -1420,7 +1462,6 @@
 
       const li = document.createElement("li");
       li.className = "item-row";
-
       li.innerHTML = `
         <div class="item-top">
           <div class="item-left">
@@ -1437,12 +1478,13 @@
         <div class="stats-dropdown hidden"></div>
       `;
       linksList.appendChild(li);
+
       const showBtn = li.querySelector(".show-stats");
       const deleteBtn = li.querySelector(".delete-link");
       const dropdown = li.querySelector(".stats-dropdown");
             
       showBtn.addEventListener("click", async () => {
-
+        
         if (!dropdown.classList.contains("hidden")) {
           dropdown.classList.add("hidden");
           dropdown.innerHTML = "";
@@ -1484,11 +1526,10 @@
           console.error(err);
           dropdown.innerHTML = "Network error.";
         }
-
       });
 
       deleteBtn.addEventListener("click", async () => {
-
+        
         const ok = confirm(`Are you sure you want to delete "${shortUrl}"? This cannot be undone.`);
         if (!ok) return;
 
@@ -1508,7 +1549,7 @@
           console.error(err);
           alert("Network error while deleting.");
         }
-        
+
       });
 
     } //for
@@ -1651,7 +1692,6 @@
             </span>
           </div>
         `;
-
         trendsList.appendChild(li);
       }
 
