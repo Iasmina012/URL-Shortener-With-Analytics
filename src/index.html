@@ -187,7 +187,7 @@
     }
 
     .analytics {
-      background:#eef2ff;
+      background: transparent;;
       padding:12px;
       border-radius:8px;
       margin-top:12px;
@@ -282,21 +282,35 @@
       min-width: 160px;
     }
 
-    /* -------- Home + Trends Shared UI -------- */
-
     .item-row {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
+      flex-direction: column;
+      gap: 8px;
       padding: 14px 16px;
       border-radius: 10px;
       transition: background 0.15s ease, transform 0.15s ease;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
     }
 
     .item-row:hover {
       background: #f8fafc;
       transform: translateY(-1px);
+    }
+
+    .item-row .item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .item-row .item-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .item-left {
@@ -359,6 +373,13 @@
       align-items: center;
       white-space: nowrap;
       flex-shrink: 0;
+    }
+
+    .item-row .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
     }
 
     /* -------- Expiration badges -------- */
@@ -516,6 +537,83 @@
       }
 
       .trends-controls > input#trendSearch { min-width: 100%; }
+    }
+
+    .stats-dropdown {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f0f4ff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      animation: fadeIn 0.25s ease-out;
+      margin-top: 8px;
+    }
+
+    .stats-dropdown div.stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.03);
+    }
+
+    .stats-dropdown ul.country-list {
+      list-style: none;
+      padding: 6px 0;
+      margin: 6px 0 0 0;
+      background: transparent;
+      border: none;
+      max-height: 150px;
+      overflow-y: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .stats-dropdown ul.country-list li {
+      background: #e0f2ff;
+      color: #1e3a8a;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .stats-dropdown img.qr-code,
+    .stats-dropdown .qr-image-centered {
+      display: block;
+      margin: 12px auto 8px auto;
+      max-width: 140px;
+      border-radius: 8px;
+      border: 1px solid #e6edf3;
+      padding: 4px;
+      background: white;
+    }
+
+    .stats-dropdown a.download-qr {
+      display: inline-block;
+      margin: 0 auto;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-size: 0.85rem;
+      text-decoration: none;
+      text-align: center;
+      font-weight: 500;
+      transition: 0.2s ease;
+    }
+    .stats-dropdown a.download-qr:hover {
+      background: #1d4ed8;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
   </style>
@@ -928,57 +1026,54 @@
   });
 
   analyticsBtnLoad.addEventListener("click", async (e) => {
-
+    
     e.preventDefault();
     let slug = analyticsInput.value.trim();
+    if (!slug) return alert("Enter Short URL or Slug.");
 
-    if (!slug) {
-      alert("Enter Short URL or Slug.");
-      return;
+    if (slug.startsWith("http")) {
+      try { slug = new URL(slug).pathname.replace("/", ""); } catch {}
     }
 
-    if (slug.startsWith("http"))
-      try {
-        slug = new URL(slug).pathname.replace("/", "");
-      } catch {}
+    try {
+      const headers = {};
+      if (window.firebaseToken) headers["authorization"] = `Bearer ${window.firebaseToken}`;
+      const res = await fetch(`/stats/${encodeURIComponent(slug)}`, { method: "GET", headers });
+      if (!res.ok) return alert("Error loading analytics.");
 
-      try {
-        const headers = {};
-        if (window.firebaseToken) {
-          headers["authorization"] = `Bearer ${window.firebaseToken}`;
-        }
+      const data = await res.json();
 
-        const res = await fetch(`/stats/${slug}`, { method: "GET", headers });
+      //clear & show stats result
+      analyticsResult.innerHTML = "";
+      analyticsResult.classList.remove("hidden");
 
-        if (!res.ok) {
-          alert("Error.");
-          return;
-        }
+      //dropdown similar to my links
+      const dropdown = document.createElement("div");
+      dropdown.className = "stats-dropdown";
+      dropdown.innerHTML = `
+        <div class="stat-item">Expiration: ${data.expires_at || 'Never'}</div>
+        <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
+        <div class="stat-item">Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
 
-        const data = await res.json();
+        <div class="stat-item">
+          <div>Countries:</div>
+          <ul class="country-list" style="margin:0; padding:0;">
+            ${(data.countries || []).map(([c,n]) => `<li>${c}: ${n}</li>`).join("") || `<li class="country-none">None</li>`}
+          </ul>
+        </div>
 
-        analyticsResult.classList.remove("hidden");
-        aExpires.textContent = data.expires_at || "Never";
-        aTotal.textContent = data.total_clicks ?? 0;
-        aUnique.textContent = data.unique_visitors ?? 0;
-
-        aCountryList.innerHTML = "";
-        (data.countries || []).forEach(([country, cnt]) => {
-          const li = document.createElement("li");
-          li.textContent = `${country}: ${cnt}`;
-          aCountryList.appendChild(li);
-        });
-
-        aQr.src = `/qr/${slug}`;
-        aQrDownload.href = `/qr/${slug}`;
-        aQrDownload.setAttribute("download", `${slug}.png`);
-        showAnalyticsView();
+        <div style="text-align:center; margin-top:12px;">
+          <img src="/qr/${encodeURIComponent(slug)}" class="qr-image-centered">
+          <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR</a>
+        </div>
+      `;
+      analyticsResult.appendChild(dropdown);
 
     } catch (err) {
       console.error(err);
-      alert("Error loading analytics.");
+      analyticsResult.innerHTML = "Network error.";
+      analyticsResult.classList.remove("hidden");
     }
-
   });
 
   navTrendsBtn.addEventListener("click", e => {
@@ -1282,29 +1377,21 @@
 
       const li = document.createElement("li");
       li.className = "item-row";
-
       li.innerHTML = `
-        <div class="item-left">
-        <a class="short-link" href="${shortUrl}" target="_blank" title="${shortUrl}">${slug}</a>
-
-          <div class="original-url" title="${fullOriginal}">${truncated}</div>
-
-          ${getExpirationLine(entry.expires || entry.expires_at)}
-
-          <div class="stats-dropdown hidden"></div>
+        <div class="item-top">
+          <div class="item-left">
+            <a class="short-link" href="${shortUrl}" target="_blank" title="${shortUrl}">${slug}</a>
+            <div class="original-url" title="${fullOriginal}">${truncated}</div>
+            ${getExpirationLine(entry.expires || entry.expires_at)}
+          </div>
+          <div class="item-right">
+            <button class="ghost show-stats">Show stats</button>
+            <button class="ghost delete-link" style="background:#fff0f0; border-color:#fca5a5;">Delete</button>
+          </div>
         </div>
 
-        <div class="item-right">
-          <button class="ghost show-stats">Show stats</button>
-          <button
-            class="ghost delete-link"
-            style="background:#fff0f0; border-color:#fca5a5;"
-          >
-            Delete
-          </button>
-        </div>
+        <div class="stats-dropdown hidden"></div>
       `;
-
       linksList.appendChild(li);
 
       const showBtn = li.querySelector(".show-stats");
@@ -1330,19 +1417,23 @@
             dropdown.innerHTML = "Error loading analytics.";
             return;
           }
+          
           const data = await res.json();
-
           dropdown.innerHTML = `
-            <div>Expiration: ${data.expires_at || 'Never'}</div>
-            <div>Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
-            <div>Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
-            <div style="margin-top:6px;">Countries:</div>
-            <ul style="margin:6px 0 0 16px;">
-              ${(data.countries || []).map(([c, n]) => `<li>${c}: ${n}</li>`).join("") || "<li>None</li>"}
-            </ul>
-            <div style="margin-top:8px;">
-              <img src="/qr/${encodeURIComponent(slug)}" style="max-width:120px; display:block; margin-top:8px;">
-              <a class="ghost" href="/qr/${encodeURIComponent(slug)}" download="${slug}.png">Download QR</a>
+            <div class="stat-item">Expiration: ${data.expires_at || 'Never'}</div>
+            <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
+            <div class="stat-item">Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
+
+            <div class="stat-item">
+              <div>Countries:</div>
+              <ul class="country-list" style="margin:0; padding:0;">
+                ${(data.countries || []).map(([c, n]) => `<li>${c}: ${n}</li>`).join("") || `<li class="country-none">None</li>`}
+              </ul>
+            </div>
+
+            <div style="text-align:center; margin-top:12px;">
+              <img src="/qr/${encodeURIComponent(slug)}" class="qr-image-centered">
+              <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR</a>
             </div>
           `;
         } catch (err) {
