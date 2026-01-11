@@ -170,7 +170,7 @@
       text-align: center;
       letter-spacing: 0.5px;
       margin-bottom: 20px;
-    }
+  }
 
     .hidden {
       display:none;
@@ -202,10 +202,11 @@
     }
 
     .analytics {
-      background: transparent;;
-      padding:12px;
-      border-radius:8px;
-      margin-top:12px;
+        background: transparent;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 12px;
+        overflow: visible;
     }
 
     ul.link-list {
@@ -555,14 +556,15 @@
     }
 
     .stats-dropdown {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      background: #f0f4ff;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      animation: fadeIn 0.25s ease-out;
-      margin-top: 8px;
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        background: #f0f4ff;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        animation: fadeIn 0.25s ease-out;
+        margin-top: 8px;
+        overflow: visible;
     }
 
     .stats-dropdown div.stat-item {
@@ -574,7 +576,7 @@
       background: #ffffff;
       box-shadow: inset 0 -1px 0 rgba(0,0,0,0.03);
     }
-
+    
     .stats-dropdown ul.country-list {
       list-style: none;
       padding: 6px 0;
@@ -626,6 +628,7 @@
       background: #1d4ed8;
     }
 
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -650,6 +653,33 @@
 
     button {
         font-family: 'Poppins', sans-serif;
+    }
+  
+    .scrollable-tab {
+        height: calc(100vh - 180px);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #appAnalytics .scrollable-tab {
+        max-height: calc(100vh - 100px);
+        overflow-y: visible;
+    }
+
+    #appAnalytics .scrollable-tab {
+      max-height: 250px;
+      overflow-y: auto;
+      transition: max-height 0.3s ease;
+    }
+
+    #appAnalytics.expanded .scrollable-tab {
+      max-height: calc(100vh - 180px);
+    }
+
+    #analyticsResult {
+      margin-top: 12px;
     }
 
   </style>
@@ -735,66 +765,41 @@
 
     <!-- Analytics -->
     <div id="appAnalytics" class="hidden">
-
-      <h1>Analytics</h1>
-
-      <label>Enter Shortened URL or Slug</label>
-      <input id="analyticsInput" type="text" placeholder="http://localhost:8080/slug or slug">
-      <div class="row" style="margin-top:8px;">
-        <button id="analyticsBtnLoad" class="primary" type="button">View Analytics</button>
-      </div>
-
-      <div id="analyticsResult" class="analytics hidden">
-        <div>Expiration Date: <span id="aExpires">Never</span></div>
-        <div>Total Clicks: <strong id="aTotal">0</strong></div>
-        <div>Unique visitors: <strong id="aUnique">0</strong></div>
-        <div style="margin-top:10px;">
-          <div>Clicks by Country:</div>
-          <ul id="aCountryList"></ul>
+      <div class="scrollable-tab">
+        <h1>Analytics</h1>
+        <label>Enter Shortened URL or Slug</label>
+        <input id="analyticsInput" type="text" placeholder="http://localhost:8080/slug or slug">
+        <div class="row" style="margin-top:8px;">
+          <button id="analyticsBtnLoad" class="primary" type="button">View Analytics</button>
         </div>
-        <div style="margin-top:10px;">
-          <img id="aQr" src="" alt="QR" style="max-width:160px; display:block; margin-top:8px;" />
-          <div style="margin-top:8px;">
-            <a id="aQrDownload" class="ghost" href="#" download="qr.png">Download QR Code</a>
-          </div>
-        </div>
+        <div id="analyticsResult" class="analytics hidden scrollable"></div>
       </div>
-
     </div>
 
     <!-- Trends -->
     <div id="appTrends" class="hidden">
-
-      <h1>Trends</h1>
-
-      <div class="row controls-row trends-controls">
-
-        <!-- Search by slug -->
-        <input id="trendSearch" type="text" placeholder="Search by slug">
-
-        <!-- Filter All / Popular -->
-        <select id="trendFilter">
-          <option value="all">All</option>
-          <option value="popular">Popular</option>
-        </select>
-
-        <!-- Sort options -->
-        <select id="trendSort">
-          <option value="">Default</option>
-          <option value="name_asc">Slug Name ↑</option>
-          <option value="name_desc">Slug Name ↓</option>
-          <option value="exp_asc">Expiration Date ↑</option>
-          <option value="exp_desc">Expiration Date ↓</option>
-          <option value="clicks_desc">Total Clicks ↓</option>
-          <option value="clicks_asc">Total Clicks ↑</option>
-          <option value="unique_desc">Unique Visitors ↓</option>
-          <option value="unique_asc">Unique Visitors ↑</option>
-        </select>
-
+      <div class="scrollable-tab">
+        <h1>Trends</h1>
+        <div class="row controls-row trends-controls">
+          <input id="trendSearch" type="text" placeholder="Search by slug">
+          <select id="trendFilter">
+            <option value="all">All</option>
+            <option value="popular">Popular</option>
+          </select>
+          <select id="trendSort">
+            <option value="">Default</option>
+            <option value="name_asc">Slug Name ↑</option>
+            <option value="name_desc">Slug Name ↓</option>
+            <option value="exp_asc">Expiration Date ↑</option>
+            <option value="exp_desc">Expiration Date ↓</option>
+            <option value="clicks_desc">Total Clicks ↓</option>
+            <option value="clicks_asc">Total Clicks ↑</option>
+            <option value="unique_desc">Unique Visitors ↓</option>
+            <option value="unique_asc">Unique Visitors ↑</option>
+          </select>
+        </div>
+        <ul id="trendsList" class="link-list trends-list"></ul>
       </div>
-
-      <ul id="trendsList" class="link-list trends-list"></ul>
-
     </div>
 
 </main>
@@ -951,8 +956,8 @@
     try {
       const headers = { "Content-Type": "application/json" };
       if (window.firebaseToken) {
-        headers["authorization"] = `Bearer ${window.firebaseToken}`;
-      }
+    headers["authorization"] = `Bearer ${window.firebaseToken}`;
+  }
 
       const res = await fetch("/shorten", { method: "POST", headers, body: JSON.stringify(body) });
       const data = await res.json().catch(() => ({}));
@@ -1062,8 +1067,10 @@
   });
 
   analyticsBtnLoad.addEventListener("click", async (e) => {
-    
+
     e.preventDefault();
+    appAnalytics.classList.add("expanded");
+
     let slug = analyticsInput.value.trim();
     if (!slug) return alert("Enter Short URL or Slug.");
 
@@ -1079,7 +1086,7 @@
 
       const data = await res.json();
 
-      //clear & show stats result
+      //xlear & show analytics result
       analyticsResult.innerHTML = "";
       analyticsResult.classList.remove("hidden");
 
@@ -1205,7 +1212,7 @@
     appShorten.classList.add("hidden");
     appAnalytics.classList.remove("hidden");
     appTrends.classList.add("hidden");
-
+    appAnalytics.classList.remove("expanded");
     navAnalyticsBtn.classList.add("active");
 
   }
@@ -1413,6 +1420,7 @@
 
       const li = document.createElement("li");
       li.className = "item-row";
+
       li.innerHTML = `
         <div class="item-top">
           <div class="item-left">
@@ -1429,7 +1437,6 @@
         <div class="stats-dropdown hidden"></div>
       `;
       linksList.appendChild(li);
-
       const showBtn = li.querySelector(".show-stats");
       const deleteBtn = li.querySelector(".delete-link");
       const dropdown = li.querySelector(".stats-dropdown");
@@ -1501,7 +1508,7 @@
           console.error(err);
           alert("Network error while deleting.");
         }
-
+        
       });
 
     } //for
