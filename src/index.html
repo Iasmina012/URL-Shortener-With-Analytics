@@ -11,6 +11,8 @@
 
   <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Rust_programming_language_black_logo.svg/1200px-Rust_programming_language_black_logo.svg.png">
 
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
 
     * { box-sizing: border-box; }
@@ -21,7 +23,7 @@
     }
 
     body {
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
       margin: 0;
       background: #f7f7f9;
       height: 100%;
@@ -46,7 +48,10 @@
     header h2 {
       margin: 0;
       color: #2563eb;
-      font-size: 1.1rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-family: 'Poppins', sans-serif;
     }
 
     nav {
@@ -155,6 +160,16 @@
       padding: 28px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.06);
       overflow: hidden;
+    }
+
+    .card h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      text-align: center;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
     }
 
     .hidden {
@@ -616,6 +631,27 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .item-left .short-link,
+    .trend-left a {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #1e40af;
+        text-decoration: none;
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .item-left .short-link:hover,
+    .trend-left a:hover {
+        color: #2563eb;
+        text-decoration: underline;
+        transform: translateY(-1px);
+    }
+
+    button {
+        font-family: 'Poppins', sans-serif;
+    }
+
   </style>
 
 </head>
@@ -915,8 +951,8 @@
     try {
       const headers = { "Content-Type": "application/json" };
       if (window.firebaseToken) {
-    headers["authorization"] = `Bearer ${window.firebaseToken}`;
-  }
+        headers["authorization"] = `Bearer ${window.firebaseToken}`;
+      }
 
       const res = await fetch("/shorten", { method: "POST", headers, body: JSON.stringify(body) });
       const data = await res.json().catch(() => ({}));
@@ -1068,12 +1104,12 @@
         </div>
       `;
       analyticsResult.appendChild(dropdown);
-
     } catch (err) {
       console.error(err);
       analyticsResult.innerHTML = "Network error.";
       analyticsResult.classList.remove("hidden");
     }
+
   });
 
   navTrendsBtn.addEventListener("click", e => {
@@ -1326,7 +1362,7 @@
     }
 
     return `<div class="expiry-line"><span class="expiry-badge expiring" title="expires in ${days} day${days === 1 ? '' : 's'}">expires in ${days}d</span></div>`;
-}
+  }
 
   function truncateUrl(url, maxLen = 48) {
 
@@ -1397,8 +1433,9 @@
       const showBtn = li.querySelector(".show-stats");
       const deleteBtn = li.querySelector(".delete-link");
       const dropdown = li.querySelector(".stats-dropdown");
-
+            
       showBtn.addEventListener("click", async () => {
+
         if (!dropdown.classList.contains("hidden")) {
           dropdown.classList.add("hidden");
           dropdown.innerHTML = "";
@@ -1417,8 +1454,8 @@
             dropdown.innerHTML = "Error loading analytics.";
             return;
           }
-          
           const data = await res.json();
+
           dropdown.innerHTML = `
             <div class="stat-item">Expiration: ${data.expires_at || 'Never'}</div>
             <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
@@ -1440,9 +1477,11 @@
           console.error(err);
           dropdown.innerHTML = "Network error.";
         }
+
       });
 
       deleteBtn.addEventListener("click", async () => {
+
         const ok = confirm(`Are you sure you want to delete "${shortUrl}"? This cannot be undone.`);
         if (!ok) return;
 
@@ -1462,6 +1501,7 @@
           console.error(err);
           alert("Network error while deleting.");
         }
+
       });
 
     } //for
