@@ -724,6 +724,81 @@
       padding: 0 12px;
     }
 
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.15s ease;
+  }
+
+    .icon-btn:hover {
+      background: #eef2ff;
+      transform: translateY(-1px);
+    }
+
+    .icon-btn.copied {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .item-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stats-dropdown {
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    .item-top {
+      width: 100%;
+    }
+
+    .country-list-vertical {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0;
+      width: 100%;
+    }
+
+    .country-list-vertical li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e5ecf6;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+
+    .country-name {
+      background: #e0ecff;
+      color: #1e40af;
+      padding: 2px 8px;
+      border-radius: 2222px;
+      font-weight: 500;
+    }
+
+    .country-count {
+      background: #e0ecff;
+      color: #1e40af;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
   </style>
 
 </head>
@@ -1025,11 +1100,11 @@
       entryDiv.appendChild(linkEl);
 
       if (data.expires) {
-        const span = document.createElement("span");
-        span.className = "small-muted";
-        span.textContent = ` (expires: ${data.expires})`;
-        span.style.marginLeft = "8px";
-        entryDiv.appendChild(span);
+        const expiresDiv = document.createElement("div");
+        expiresDiv.className = "small-muted";
+        expiresDiv.style.marginTop = "6px";
+        expiresDiv.textContent = `Expires: ${data.expires}`;
+        entryDiv.appendChild(expiresDiv);
       }
 
       const generateBtn = document.createElement("button");
@@ -1140,13 +1215,18 @@
         <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
         <div class="stat-item">Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
 
-        <div class="stat-item">
-          <div>Countries:</div>
-          <ul class="country-list" style="margin:0; padding:0;">
-            ${(data.countries || []).map(([c,n]) => `<li>${c}: ${n}</li>`).join("") || `<li class="country-none">None</li>`}
+        <div class="stat-item" style="flex-direction:column; align-items:flex-start;">Countries
+          <ul class="country-list-vertical">
+            ${(data.countries || []).map(
+              ([c, n]) => `
+                <li>
+                  <span class="country-name"><strong>${c}</strong></span>
+                  <span class="country-count"><strong>${n}</strong></span>
+                </li>
+              `
+            ).join("") || `<li>No data</li>`}
           </ul>
         </div>
-
         <div style="text-align:center; margin-top:12px;">
           <img src="/qr/${encodeURIComponent(slug)}" class="qr-image-centered">
           <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR</a>
@@ -1470,11 +1550,11 @@
             ${getExpirationLine(entry.expires || entry.expires_at)}
           </div>
           <div class="item-right">
+            <button class="icon-btn copy-link" title="Copy link" data-url="${shortUrl}">📋</button>
             <button class="ghost show-stats">Show stats</button>
             <button class="ghost delete-link" style="background:#fff0f0; border-color:#fca5a5;">Delete</button>
           </div>
         </div>
-
         <div class="stats-dropdown hidden"></div>
       `;
       linksList.appendChild(li);
@@ -1506,17 +1586,21 @@
           const data = await res.json();
 
           dropdown.innerHTML = `
-            <div class="stat-item">Expiration: ${data.expires_at || 'Never'}</div>
+            <div class="stat-item">Expiration: <strong>${data.expires_at || 'Never'}</strong></div>
             <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
             <div class="stat-item">Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
-
-            <div class="stat-item">
-              <div>Countries:</div>
-              <ul class="country-list" style="margin:0; padding:0;">
-                ${(data.countries || []).map(([c, n]) => `<li>${c}: ${n}</li>`).join("") || `<li class="country-none">None</li>`}
+            <div class="stat-item" style="flex-direction:column; align-items:flex-start;">Countries: 
+              <ul class="country-list-vertical">
+                ${(data.countries || []).map(
+                  ([c, n]) => `
+                    <li>
+                      <span class="country-name"><strong>${c}</strong></span>
+                      <span class="country-count"><strong>${n}</strong></span>
+                    </li>
+                  `
+                ).join("") || `<li>No data</li>`}
               </ul>
             </div>
-
             <div style="text-align:center; margin-top:12px;">
               <img src="/qr/${encodeURIComponent(slug)}" class="qr-image-centered">
               <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR</a>
@@ -1550,6 +1634,24 @@
           alert("Network error while deleting.");
         }
 
+      });
+
+      const copyBtn = li.querySelector(".copy-link");
+
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(copyBtn.dataset.url);
+
+          copyBtn.classList.add("copied");
+          copyBtn.textContent = "✓";
+
+          setTimeout(() => {
+            copyBtn.classList.remove("copied");
+            copyBtn.textContent = "📋";
+          }, 1200);
+        } catch {
+          alert("Failed to copy link.");
+        }
       });
 
     } //for
