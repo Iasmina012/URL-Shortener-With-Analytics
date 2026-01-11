@@ -135,6 +135,12 @@
       cursor:pointer;
     }
 
+    button.primary:hover,
+    button.ghost:hover {
+      transform: translateY(-2px);
+      transition: transform 0.15s ease;
+    }
+
     main {
       padding-top: 84px;
       display: flex;
@@ -257,6 +263,11 @@
 
     .ghost:hover {
       background:#f3f4f6;
+    }
+
+    button.delete-link:hover {
+      background: #fee2e2 !important;
+      border-color: #f87171 !important;
     }
 
     .row {
