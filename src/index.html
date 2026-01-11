@@ -15,13 +15,19 @@
 
     * { box-sizing: border-box; }
 
+    html {
+        height: 100%;
+        margin: 0;
+    }
+
     body {
       font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
       margin: 0;
       background: #f7f7f9;
-      min-height: 100vh;
+      height: 100%;
     }
 
+    /* -------- Header Nav -------- */
     header {
       position: fixed;
       top: 0;
@@ -35,6 +41,12 @@
       padding: 0 24px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.06);
       z-index: 100;
+    }
+
+    header h2 {
+      margin: 0;
+      color: #2563eb;
+      font-size: 1.1rem;
     }
 
     nav {
@@ -56,12 +68,6 @@
     nav button.active {
       color:#fff;
       background:#2563eb;
-    }
-
-    header h2 {
-      margin: 0;
-      color: #2563eb;
-      font-size: 1.1rem;
     }
 
     h1 {
@@ -109,8 +115,8 @@
     main {
       padding-top: 84px;
       display: flex;
-      justify-content:
-      center; padding-bottom: 40px;
+      justify-content: center;
+      padding-bottom: 40px;
     }
 
     .card {
@@ -119,16 +125,15 @@
       border-radius: 12px;
       padding: 28px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      overflow: hidden;
     }
 
     .hidden {
       display:none;
     }
 
-    .row {
-      display:flex;
-      gap:12px;
-      align-items:center;
+    .top-space {
+      margin-top: 8px;
     }
 
     .muted {
@@ -136,6 +141,11 @@
       font-size:0.9rem;
       text-align:center;
       margin-top:8px;
+    }
+
+    .small-muted {
+      color:#6b7280;
+      font-size:0.85rem;
     }
 
     .shortened-url {
@@ -147,7 +157,7 @@
       text-align:center;
     }
 
-    .analytics-box {
+    .analytics {
       background:#eef2ff;
       padding:12px;
       border-radius:8px;
@@ -172,15 +182,6 @@
       align-items:center;
     }
 
-    .small-muted {
-      color:#6b7280;
-      font-size:0.85rem;
-    }
-
-    .top-space {
-      margin-top: 8px;
-    }
-
     .link-qr {
       max-width: 88px;
       margin-left: 8px;
@@ -191,17 +192,36 @@
       background:white;
     }
 
-    .controls-row {
-      display:flex;
-      gap:8px;
-      align-items:center;
+    .qr-image-centered {
+      display:block;
+      margin:12px auto 0 auto;
+      max-width:160px;
     }
 
+    #my-links-container {
+      height: calc(100vh - 180px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* show stats, download qr */
     .btn-row {
       display:flex;
       gap:10px;
       justify-content:center;
       margin-top:12px;
+    }
+
+    .controls-row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #e6edf3;
     }
 
     .ghost {
@@ -216,12 +236,6 @@
       background:#f3f4f6;
     }
 
-    .qr-image-centered {
-      display:block;
-      margin:12px auto 0 auto;
-      max-width:160px;
-    }
-
     #logoutBtn {
       background:#ef4444;
       color:white;
@@ -229,17 +243,252 @@
       border-radius:8px;
     }
 
-    html, body {
-        height: 100%;
-        margin: 0;
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
-    #my-links-container {
-      height: calc(100vh - 180px);
-      overflow-y: auto;
+    .row input[type="text"], .row input[type="url"], .row select {
+      width: auto;
+      min-width: 160px;
+    }
+
+    /* -------- Home + Trends Shared UI -------- */
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .item-row:hover {
+      background: #f8fafc;
+      transform: translateY(-1px);
+    }
+
+    .item-left {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .item-left a {
+      font-weight: 600;
+      text-decoration: none;
+      color: #2563eb;
+    }
+
+    .item-left a:hover {
+      text-decoration: underline;
+    }
+
+    .item-left a.short-link {
+      display: block;
+      font-weight: 600;
+      color: #2563eb;
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .item-left a.short-link:hover {
+      text-decoration: underline;
+    }
+
+    .item-left .small-muted {
+      max-width: 520px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-left .original-url {
+      display: block;
+      font-size: 0.9rem;
+      color: #6b7280;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-left .expiry-line {
+      font-size: 0.85rem;
+      color: #374151;
+    }
+
+    .item-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* -------- Expiration badges -------- */
+
+    .expiry-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+
+    .expired {
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 800;
+    }
+
+    /* expires in */
+    .expiring {
+      background: #ecfdf5;
+      color: #065f46;
+      box-shadow: inset 0 -1px 0 rgba(6,95,70,0.06);
+      font-weight: 700;
+    }
+
+    .expiry-never {
+      background: #e0f2ff;
+      color: #2563eb;
+      font-weight: 700;
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+
+    /* ---------- Trends UI ---------- */
+
+    .trends-list li.trend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .trends-list li.trend-item:hover {
+      background: #f8fafc;
+      transform: translateY(-1px);
+    }
+
+    .trend-left {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .trend-left a {
+      font-weight: 600;
+      text-decoration: none;
+      color: #2563eb;
+    }
+
+    .trend-left a:hover {
+      text-decoration: underline;
+    }
+
+    .trend-right {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .trend-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #eef2ff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      min-width: 72px;
+      font-size: 0.85rem;
+    }
+
+    .trend-stat b {
+      font-size: 1rem;
+      color: #1e3a8a;
+    }
+
+    .trend-stat span {
+      color: #6b7280;
+    }
+
+    .trends-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      overflow-x: auto;
+      padding: 12px 0 4px 0;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e6edf3;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .trends-controls > input,
+    .trends-controls > select,
+    .trends-controls > button {
+      box-sizing: border-box;
+      min-height: 44px;
+      padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      cursor: pointer;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .trends-controls > button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      flex: 0 0 auto;
+      transition: background 0.2s;
+    }
+
+    .trends-controls > button:hover {
+      background: #1d4ed8;
+    }
+
+    .trends-controls > select {
+      flex: 0 0 140px;
+    }
+
+    .trends-controls > input#trendSearch {
+      min-width: 180px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .trends-controls > #trendSearch { flex: 100%; }
+    }
+
+    @media (max-width: 640px) {
+      .trends-controls {
+        flex-wrap: wrap;
+      }
+
+      .trends-controls > input#trendSearch { min-width: 100%; }
     }
 
   </style>
@@ -334,7 +583,7 @@
         <button id="analyticsBtnLoad" class="primary" type="button">View Analytics</button>
       </div>
 
-      <div id="analyticsResult" class="analytics-box hidden">
+      <div id="analyticsResult" class="analytics hidden">
         <div>Expiration Date: <span id="aExpires">Never</span></div>
         <div>Total Clicks: <strong id="aTotal">0</strong></div>
         <div>Unique visitors: <strong id="aUnique">0</strong></div>
@@ -357,28 +606,35 @@
 
       <h1>Trends</h1>
 
-      <div class="row" style="margin-bottom:12px;">
-        <input id="trendSearch" type="text" placeholder="Search by Slug">
+      <div class="row controls-row trends-controls">
 
+        <!-- Search by slug -->
+        <input id="trendSearch" type="text" placeholder="Search by slug">
+
+        <!-- Filter All / Popular -->
         <select id="trendFilter">
           <option value="all">All</option>
           <option value="popular">Popular</option>
         </select>
 
+        <!-- Sort options -->
         <select id="trendSort">
-          <option value="name_asc">Name ↑</option>
-          <option value="name_desc">Name ↓</option>
-          <option value="exp_asc">Expiration ↑</option>
-          <option value="exp_desc">Expiration ↓</option>
+          <option value="">Default</option>
+          <option value="name_asc">Slug Name ↑</option>
+          <option value="name_desc">Slug Name ↓</option>
+          <option value="exp_asc">Expiration Date ↑</option>
+          <option value="exp_desc">Expiration Date ↓</option>
+          <option value="clicks_desc">Total Clicks ↓</option>
+          <option value="clicks_asc">Total Clicks ↑</option>
+          <option value="unique_desc">Unique Visitors ↓</option>
+          <option value="unique_asc">Unique Visitors ↑</option>
         </select>
+
       </div>
 
-      <ul id="trendsList" class="link-list"></ul>
-      <div id="trendsCharts" style="margin-top:20px;"></div>
+      <ul id="trendsList" class="link-list trends-list"></ul>
 
     </div>
-
-  </div>
 
 </main>
 
@@ -485,7 +741,7 @@
           logoutBtn.classList.add("hidden");
 
           sessionLinks = [];
-          linksList.innerHTML = "<li>No links created in this session.</li>";
+          linksList.innerHTML = "<li>No links created.</li>";
 
           showAuthView();
 
@@ -617,7 +873,7 @@
       shortResult.appendChild(entryDiv);
 
       sessionLinks = sessionLinks.filter(e => (e.short_url || "").split('/').pop().split(' ')[0] !== slug);
-      sessionLinks.unshift({ short_url: data.short_url, expires: data.expires || null });
+      sessionLinks.unshift({slug: slug, short_url: data.short_url, url: url, expires: data.expires || null});
 
       renderLinks();
 
@@ -725,12 +981,27 @@
 
   });
 
+  trendSearch.addEventListener('input', loadTrends);
+
+  trendFilter.addEventListener('change', () => {trendSort.value = "";loadTrends();});
+
+  trendSort.addEventListener('change', loadTrends);
+
+  function clearNavActive() {
+    navHomeBtn.classList.remove("active");
+    navShortenBtn.classList.remove("active");
+    navAnalyticsBtn.classList.remove("active");
+    navTrendsBtn.classList.remove("active");
+  }
+
   function showAuthView() {
 
+    clearNavActive();
     authCard.classList.remove("hidden");
     appHome.classList.add("hidden");
     appShorten.classList.add("hidden");
     appAnalytics.classList.add("hidden");
+    appTrends.classList.add("hidden");
 
     navHomeBtn.classList.add("active");
     navShortenBtn.classList.add("hidden");
@@ -741,60 +1012,60 @@
 
   function showHomeView() {
 
+    clearNavActive();
+
     authCard.classList.add("hidden");
     appHome.classList.remove("hidden");
     appShorten.classList.add("hidden");
     appAnalytics.classList.add("hidden");
+    appTrends.classList.add("hidden");
 
     navHomeBtn.classList.add("active");
-    navShortenBtn.classList.remove("hidden");
-    navAnalyticsBtn.classList.remove("hidden");
-    logoutBtn.classList.remove("hidden");
-    navShortenBtn.classList.remove("active");
-    navAnalyticsBtn.classList.remove("active");
 
   }
 
   function showShortenView() {
 
+    clearNavActive();
+
     authCard.classList.add("hidden");
     appHome.classList.add("hidden");
     appShorten.classList.remove("hidden");
     appAnalytics.classList.add("hidden");
+    appTrends.classList.add("hidden");
 
-    navHomeBtn.classList.remove("active");
     navShortenBtn.classList.add("active");
-    navAnalyticsBtn.classList.remove("active");
 
   }
 
   function showAnalyticsView() {
 
+    clearNavActive();
+
     authCard.classList.add("hidden");
     appHome.classList.add("hidden");
     appShorten.classList.add("hidden");
     appAnalytics.classList.remove("hidden");
+    appTrends.classList.add("hidden");
 
-    navHomeBtn.classList.remove("active");
-    navShortenBtn.classList.remove("active");
     navAnalyticsBtn.classList.add("active");
 
   }
 
   function showTrendsView() {
-  authCard.classList.add("hidden");
-  appHome.classList.add("hidden");
-  appShorten.classList.add("hidden");
-  appAnalytics.classList.add("hidden");
-  appTrends.classList.remove("hidden");
 
-  navHomeBtn.classList.remove("active");
-  navShortenBtn.classList.remove("active");
-  navAnalyticsBtn.classList.remove("active");
-  navTrendsBtn.classList.add("active");
+    clearNavActive();
 
-  loadTrends();
-}
+    authCard.classList.add("hidden");
+    appHome.classList.add("hidden");
+    appShorten.classList.add("hidden");
+    appAnalytics.classList.add("hidden");
+    appTrends.classList.remove("hidden");
+
+    navTrendsBtn.classList.add("active");
+    loadTrends();
+
+  }
 
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -807,7 +1078,7 @@
     const password = document.getElementById("loginPassword").value;
 
     if (!email || !password) {
-      authError.textContent = "Please fill in both email and password.";
+      authError.textContent = "Please fill in both email and password fields.";
       return;
     }
 
@@ -843,6 +1114,16 @@
 
     if (password.length < 8) {
       signupError.textContent = "Password must be at least 8 characters long.";
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      signupError.textContent = "Password must contain at least one uppercase letter.";
+      return;
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      signupError.textContent = "Password must contain at least one special character.";
       return;
     }
 
@@ -883,28 +1164,117 @@
 
   }
 
+  function daysUntilExpirationDate(expiresStr) {
+
+    if (!expiresStr) return null;
+    const d = new Date(expiresStr + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return null;
+
+    //local midnight
+    const today = new Date();
+    const tzOffset = today.getTimezoneOffset() * 60 * 1000;
+    const todayMid = new Date(Math.floor((today.getTime() - tzOffset) / (24 * 3600 * 1000)) * (24 * 3600 * 1000) + tzOffset);
+
+    const diffMs = d.getTime() - todayMid.getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  }
+
+  function isExpired(expires) {
+
+    const d = daysUntilExpirationDate(expires);
+    return d !== null && d < 0;
+
+  }
+
+  function getExpirationLine(expires) {
+    if (!expires)
+        return '<div class="expiry-line"><span class="expiry-badge expiry-never" title="Never expires">Never expires</span></div>';
+
+    const days = daysUntilExpirationDate(expires);
+    if (days === null) return '<div class="expiry-line small-muted">Invalid date</div>';
+
+    if (days < 0) {
+      const daysAgo = Math.abs(days);
+      return `<div class="expiry-line"><span class="expiry-badge expired" title="expired ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago">expired</span></div>`;
+    }
+
+    if (days === 0) {
+      return `<div class="expiry-line"><span class="expiry-badge expiring" title="expires today">expires today</span></div>`;
+    }
+
+    return `<div class="expiry-line"><span class="expiry-badge expiring" title="expires in ${days} day${days === 1 ? '' : 's'}">expires in ${days}d</span></div>`;
+}
+
+  function truncateUrl(url, maxLen = 48) {
+
+    if (!url || url.length <= maxLen) return url;
+    const keep = maxLen - 1;
+    const front = Math.ceil(keep / 2);
+    const back = Math.floor(keep / 2);
+    return url.slice(0, front) + '…' + url.slice(url.length - back);
+
+  }
+
   function renderLinks() {
 
     linksList.innerHTML = "";
 
-    for (const entry of sessionLinks) {
-      const shortUrl = entry.short_url || (entry.url ? `http://localhost:8080/${entry.slug}` : "");
+    if (!Array.isArray(sessionLinks) || sessionLinks.length === 0) {
+      linksList.innerHTML = "<li>No links created.</li>";
+      return;
+    }
+
+    //sort: non-expired first, then nearest expirations
+    const items = sessionLinks.slice().sort((a, b) => {
+
+      const aExp = a.expires || a.expires_at || null;
+      const bExp = b.expires || b.expires_at || null;
+      const aDays = daysUntilExpirationDate(aExp);
+      const bDays = daysUntilExpirationDate(bExp);
+      const aExpired = (aDays !== null && aDays < 0) ? 1 : 0;
+      const bExpired = (bDays !== null && bDays < 0) ? 1 : 0;
+
+      if (aExpired !== bExpired)
+        return aExpired - bExpired; //non-expired first
+
+      //if both same expired-state, nearest expired first
+      if (aDays !== null && bDays !== null)
+        return aDays - bDays;
+
+      return 0;
+
+    });
+
+    for (const entry of items) {
+
+      const shortUrl = entry.short_url || (entry.slug ? `http://localhost:8080/${entry.slug}` : "");
       const slug = entry.slug || (shortUrl.split('/').pop());
+      const fullOriginal = entry.url || "";
+      const truncated = truncateUrl(fullOriginal, 56);
 
       const li = document.createElement("li");
-      li.style.display = "flex";
-      li.style.justifyContent = "space-between";
-      li.style.flexWrap = "wrap";
+      li.className = "item-row";
 
       li.innerHTML = `
-        <div style="flex:1; min-width:200px;">
-          <a href="${shortUrl}" target="_blank">${shortUrl}</a>
-          <div class="small-muted">${entry.expires ? `expires: ${entry.expires}` : ""}</div>
-          <div class="stats-dropdown hidden" style="margin-top:8px; background:#f8fafc; padding:8px; border-radius:8px;"></div>
+        <div class="item-left">
+        <a class="short-link" href="${shortUrl}" target="_blank" title="${shortUrl}">${slug}</a>
+
+          <div class="original-url" title="${fullOriginal}">${truncated}</div>
+
+          ${getExpirationLine(entry.expires || entry.expires_at)}
+
+          <div class="stats-dropdown hidden"></div>
         </div>
-        <div style="display:flex; gap:8px; align-items:center; margin-left:12px;">
+
+        <div class="item-right">
           <button class="ghost show-stats">Show stats</button>
-          <button class="ghost delete-link" style="background:#fff0f0; border-color:#fca5a5;">Delete</button>
+          <button
+            class="ghost delete-link"
+            style="background:#fff0f0; border-color:#fca5a5;"
+          >
+            Delete
+          </button>
         </div>
       `;
 
@@ -975,13 +1345,10 @@
           alert("Network error while deleting.");
         }
       });
-    }
 
-    if (sessionLinks.length === 0) {
-      linksList.innerHTML = "<li>No links created.</li>";
-    }
+    } //for
 
-}
+  }
 
   async function loadMyLinks() {
 
@@ -1022,11 +1389,111 @@
 
   }
 
-  async function loadAnalyticsBySlug(slug) {
+  async function loadTrends() {
 
-    analyticsInput.value = slug;
-    showAnalyticsView();
-    analyticsBtnLoad.click();
+    trendsList.innerHTML = '<li class="small-muted">Loading trends…</li>';
+
+    try {
+      const res = await fetch('/trends?limit=200');
+      if (!res.ok) throw new Error("Failed to load trends");
+
+      let data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        trendsList.innerHTML = '<li class="small-muted">No links found.</li>';
+        return;
+      }
+
+      //elimina expired links
+      data = data.filter(l => {
+        const d = daysUntilExpirationDate(l.expires_at || l.expires);
+        return d === null || d >= 0;
+      });
+
+      //search by slug
+      const q = trendSearch.value.trim().toLowerCase();
+      if (q) {
+        data = data.filter(l =>
+          (l.slug || '').toLowerCase().includes(q)
+        );
+      }
+
+      //sort: All, Popular
+      if (trendFilter.value === 'popular') {
+        data.sort((a, b) => {
+          const c = (b.total_clicks || 0) - (a.total_clicks || 0);
+          if (c !== 0) return c;
+          return (b.unique_visitors || 0) - (a.unique_visitors || 0);
+        });
+      } else {
+        //All -> desc
+        data.sort((a, b) => {
+          const da = daysUntilExpirationDate(a.expires_at || a.expires) ?? -9999;
+          const db = daysUntilExpirationDate(b.expires_at || b.expires) ?? -9999;
+          return db - da;
+        });
+      }
+
+      //Sort by
+      const sortVal = trendSort.value;
+      if (sortVal) {
+        const [field, dir] = sortVal.split('_');
+
+        data.sort((a, b) => {
+          let va, vb;
+
+          if (field === 'name') {
+            va = (a.slug || '').toLowerCase();
+            vb = (b.slug || '').toLowerCase();
+          } else if (field === 'exp') {
+            va = daysUntilExpirationDate(a.expires_at || a.expires) ?? 9999;
+            vb = daysUntilExpirationDate(b.expires_at || b.expires) ?? 9999;
+          } else if (field === 'clicks') {
+            va = a.total_clicks || 0;
+            vb = b.total_clicks || 0;
+          } else if (field === 'unique') {
+            va = a.unique_visitors || 0;
+            vb = b.unique_visitors || 0;
+          }
+
+          if (va < vb) return dir === 'asc' ? -1 : 1;
+          if (va > vb) return dir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      //render
+      trendsList.innerHTML = "";
+      for (const r of data) {
+        const li = document.createElement("li");
+        li.className = "trend-item";
+
+        li.innerHTML = `
+          <div class="trend-left">
+            <a href="${r.short_url}" target="_blank">${r.slug}</a>
+
+            <div class="small-muted">${r.url}</div>
+            ${r.expires_at ? `<div class="small-muted">expires: ${r.expires_at}</div>` : ""}
+          </div>
+
+          <div class="trend-right">
+            <span class="trend-stat">
+              <b>${r.total_clicks || 0}</b>
+              <span>clicks</span>
+            </span>
+            <span class="trend-stat">
+              <b>${r.unique_visitors || 0}</b>
+              <span>unique</span>
+            </span>
+          </div>
+        `;
+
+        trendsList.appendChild(li);
+      }
+
+    } catch (err) {
+      console.error(err);
+      trendsList.innerHTML = '<li class="small-muted">Error loading trends.</li>';
+    }
 
   }
 
