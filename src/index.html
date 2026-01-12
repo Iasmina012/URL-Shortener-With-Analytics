@@ -321,14 +321,6 @@
       min-width: 0;
     }
 
-    .item-row .item-right {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
     .item-left {
       display: flex;
       flex-direction: column;
@@ -565,7 +557,7 @@
       border: 1px solid #cbd5e1;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       animation: fadeIn 0.25s ease-out;
-      margin-top: 8px;
+      margin-top: 12px;
       overflow: visible;
     }
 
@@ -640,7 +632,7 @@
       font-family: 'Poppins', sans-serif;
       font-weight: 700;
       font-size: 1.05rem;
-      color: #1e40af;
+      color: #2563eb;
       text-decoration: none;
       transition: color 0.2s ease, transform 0.2s ease;
     }
@@ -654,11 +646,6 @@
 
     button {
       font-family: 'Poppins', sans-serif;
-    }
-
-    #appAnalytics .scrollable-tab {
-      max-height: calc(100vh - 100px);
-      overflow-y: visible;
     }
 
     #appAnalytics .scrollable-tab {
@@ -683,20 +670,11 @@
       gap: 14px;
     }
 
-    #appTrends .scrollable-tab {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
     #trendsList {
       flex: 1 1 auto;
-    }
-
-    #trendsList {
       max-height: calc(100vh - 300px);
       overflow-y: auto;
-      padding-right: 4px;
+      padding-right: 4px; 
     }
 
     #trendsList::-webkit-scrollbar {
@@ -752,11 +730,6 @@
     .item-row {
       display: flex;
       flex-direction: column;
-    }
-
-    .stats-dropdown {
-      margin-top: 12px;
-      width: 100%;
     }
 
     .item-top {
@@ -856,7 +829,7 @@
     <div id="appHome" class="hidden">
 
       <div id="my-links-container">
-        <h1>My links</h1>
+        <h1>My URLs</h1>
         <ul id="linksList" class="link-list"></ul>
       </div>
     </div>
