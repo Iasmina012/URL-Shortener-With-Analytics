@@ -10,7 +10,7 @@ Development in Progress...
 - `Analytics` (QR code generator, expiration date, clicks, unique visitors, geographic location);
 - `Requirements` (RESTful API with endpoints for shortening, redirecting and analytics, short code generation [6-8 characters, alphanumeric], rate limiter, DB for URLs and click events, collision detection and handling, web dashboard showing all URLs and statistics);
 - `Authentication`
-- `Filtering` -> **coming soon**
+- `Search, Filter & Sort URLs` that were created across the app (without the expired ones)
 
 ## Description
 
