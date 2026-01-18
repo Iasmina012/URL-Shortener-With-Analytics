@@ -832,6 +832,7 @@
         <div class="trends-controls">
           <input id="trendSearch" type="text" placeholder="Search by slug">
           <select id="trendFilter">
+            <option value="">Default</option>
             <option value="all">All</option>
             <option value="popular">Popular</option>
           </select>
@@ -1202,9 +1203,9 @@
 
   trendSearch.addEventListener('input', loadTrends);
 
-  trendFilter.addEventListener('change', () => {trendSort.value = "";loadTrends();});
+  trendFilter.addEventListener('change', () => {trendSort.value = ""; loadTrends();});
 
-  trendSort.addEventListener('change', loadTrends);
+  trendSort.addEventListener('change', () => {trendFilter.value = "" ; loadTrends();});
 
   function clearNavActive() {
     navHomeBtn.classList.remove("active");
