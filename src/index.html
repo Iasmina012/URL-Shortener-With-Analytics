@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>URL Shortener Demo</title>
+  <title>ATAD</title>
 
   <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Rust_programming_language_black_logo.svg/1200px-Rust_programming_language_black_logo.svg.png">
 
@@ -1055,7 +1055,7 @@
       if (!res.ok || (data && data.error)) {
         shortResult.classList.remove("hidden");
         shortResult.style.background = "#ffe6e6";
-        shortResult.textContent = (data && data.error) ? data.error : "Error creating short link.";
+        shortResult.textContent = (data && data.error) ? data.error : "Error creating a short URL.";
         return;
       }
 
@@ -1162,7 +1162,7 @@
     appAnalytics.classList.add("expanded");
 
     let slug = analyticsInput.value.trim();
-    if (!slug) return alert("Enter Short URL or Slug.");
+    if (!slug) return alert("Enter short URL or Slug.");
 
     if (slug.startsWith("http")) {
       try { slug = new URL(slug).pathname.replace("/", ""); } catch {}
@@ -1184,9 +1184,9 @@
       const dropdown = document.createElement("div");
       dropdown.className = "stats-dropdown";
       dropdown.innerHTML = `
-        <div class="stat-item">Expiration: ${data.expires_at || 'Never'}</div>
-        <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
-        <div class="stat-item">Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
+        <div class="stat-item">Expiration Date: ${data.expires_at || 'Never'}</div>
+        <div class="stat-item">Total Clicks: <strong>${data.total_clicks ?? 0}</strong></div>
+        <div class="stat-item">Unique Visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
 
         <div class="stat-item" style="flex-direction:column; align-items:flex-start;">Countries
           <ul class="country-list-vertical">
@@ -1197,7 +1197,7 @@
                   <span class="country-count"><strong>${n}</strong></span>
                 </li>
               `
-            ).join("") || `<li>No data</li>`}
+            ).join("") || `<li>No data found.</li>`}
           </ul>
         </div>
         <div style="text-align:center; margin-top:12px;">
@@ -1208,7 +1208,7 @@
       analyticsResult.appendChild(dropdown);
     } catch (err) {
       console.error(err);
-      analyticsResult.innerHTML = "Network error.";
+      analyticsResult.innerHTML = "Network or server error.";
       analyticsResult.classList.remove("hidden");
     }
 
@@ -1338,7 +1338,7 @@
     const password = document.getElementById("loginPassword").value;
 
     if (!email || !password) {
-      authError.textContent = "Please fill in both email and password fields.";
+      authError.textContent = "Please fill in all required fields.";
       return;
     }
 
@@ -1350,7 +1350,7 @@
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-        authError.textContent = err?.message || "Login failed.";
+        authError.textContent = err?.message || "Login failed!";
       }
 
   }
@@ -1395,7 +1395,7 @@
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err) {
-        signupError.textContent = err?.message || "Account creation failed.";
+        signupError.textContent = err?.message || "Failed to create account!";
       }
 
   }
@@ -1559,9 +1559,9 @@
           const data = await res.json();
 
           dropdown.innerHTML = `
-            <div class="stat-item">Expiration: <strong>${data.expires_at || 'Never'}</strong></div>
-            <div class="stat-item">Total clicks: <strong>${data.total_clicks ?? 0}</strong></div>
-            <div class="stat-item">Unique visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
+            <div class="stat-item">Expiration Date: <strong>${data.expires_at || 'Never'}</strong></div>
+            <div class="stat-item">Total Clicks: <strong>${data.total_clicks ?? 0}</strong></div>
+            <div class="stat-item">Unique Visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
             <div class="stat-item" style="flex-direction:column; align-items:flex-start;">Countries: 
               <ul class="country-list-vertical">
                 ${(data.countries || []).map(
@@ -1571,23 +1571,23 @@
                       <span class="country-count"><strong>${n}</strong></span>
                     </li>
                   `
-                ).join("") || `<li>No data</li>`}
+                ).join("") || `<li>No data found.</li>`}
               </ul>
             </div>
             <div style="text-align:center; margin-top:12px;">
               <img src="/qr/${encodeURIComponent(slug)}" class="qr-image-centered">
-              <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR</a>
+              <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR Code</a>
             </div>
           `;
         } catch (err) {
           console.error(err);
-          dropdown.innerHTML = "Network error.";
+          dropdown.innerHTML = "Network or server error.";
         }
       });
 
       deleteBtn.addEventListener("click", async () => {
         
-        const ok = confirm(`Are you sure you want to delete "${shortUrl}"? This cannot be undone.`);
+        const ok = confirm(`Are you sure you want to delete "${shortUrl}"? This action cannot be undone.`);
         if (!ok) return;
 
         try {
@@ -1604,7 +1604,7 @@
           }
         } catch (err) {
           console.error(err);
-          alert("Network error while deleting.");
+          alert("Network or server error while deleting.");
         }
 
       });
@@ -1623,7 +1623,7 @@
             copyBtn.textContent = "📋";
           }, 1200);
         } catch {
-          alert("Failed to copy link.");
+          alert("Failed to copy URL.");
         }
       });
 
@@ -1636,7 +1636,7 @@
     linksList.innerHTML = "<li>Loading...</li>";
 
     if (!window.firebaseToken) {
-      linksList.innerHTML = "<li>Not authenticated.</li>";
+      linksList.innerHTML = "<li>Not authorized.</li>";
       return;
     }
 
@@ -1644,19 +1644,19 @@
       const res = await fetch("/my_urls", {headers: {"authorization": `Bearer ${window.firebaseToken}`}});
 
       if (res.status === 401) {
-        linksList.innerHTML = "<li>Autenthication expired.</li>";
+        linksList.innerHTML = "<li>Authorization expired.</li>";
         return;
       }
 
       if (!res.ok) {
-        linksList.innerHTML = "<li>Couldn't load links.</li>";
+        linksList.innerHTML = "<li>Couldn't load URLs.</li>";
         return;
       }
 
       const data = await res.json();
 
       if (!Array.isArray(data) || data.length === 0) {
-        linksList.innerHTML = "<li>No links created.</li>";
+        linksList.innerHTML = "<li>No URLs created.</li>";
         return;
       }
 
@@ -1665,7 +1665,7 @@
 
     } catch (err) {
       console.error(err);
-      linksList.innerHTML = "<li>Server Error.</li>";
+      linksList.innerHTML = "<li>Network or server error.</li>";
     }
 
   }
@@ -1676,7 +1676,7 @@
 
     try {
       const res = await fetch('/trends?limit=200');
-      if (!res.ok) throw new Error("Failed to load trends");
+      if (!res.ok) throw new Error("Failed to load trends.");
 
       let data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
@@ -1759,11 +1759,11 @@
           <div class="trend-right">
             <span class="trend-stat">
               <b>${r.total_clicks || 0}</b>
-              <span>clicks</span>
+              <span>total clicks</span>
             </span>
             <span class="trend-stat">
               <b>${r.unique_visitors || 0}</b>
-              <span>unique</span>
+              <span>unique visitors</span>
             </span>
           </div>
         `;

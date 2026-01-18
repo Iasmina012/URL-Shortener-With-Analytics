@@ -4,15 +4,15 @@ use std::{fs, path::PathBuf};
 
 pub async fn init_db() -> SqlitePool {
 
-    let mut db_folder: PathBuf = home_dir().expect("Cannot find HOME directory");
+    let mut db_folder: PathBuf = home_dir().expect("Cannot find HOME directory.");
 
     //create folder
     db_folder.push(".url_shortener");
-    println!("Database folder resolved to: {}", db_folder.display());
+    println!("Database folder resolved to: {}.", db_folder.display());
 
     if !db_folder.exists() {
         println!("Folder does NOT exist. Trying to create one...");
-        fs::create_dir_all(&db_folder).expect("Failed to create database folder");
+        fs::create_dir_all(&db_folder).expect("Failed to create database folder.");
     }
 
     //databse file
@@ -24,7 +24,7 @@ pub async fn init_db() -> SqlitePool {
 
     let pool = SqlitePool::connect(&db_url)
         .await
-        .expect("Couldn't connect to SQLite database");
+        .expect("Couldn't connect to SQLite database.");
 
     //urls table
     sqlx::query(
@@ -40,7 +40,7 @@ pub async fn init_db() -> SqlitePool {
     )
     .execute(&pool)
     .await
-    .expect("Failed to create table");
+    .expect("Failed to create table.");
 
     //backward compatibility
     let columns = sqlx::query("PRAGMA table_info(urls);")
@@ -84,9 +84,9 @@ pub async fn init_db() -> SqlitePool {
     )
     .execute(&pool)
     .await
-    .expect("Failed to create table");
+    .expect("Failed to create table.");
 
-    println!("Database initialized successfully");
+    println!("Database initialized successfully.");
     pool
 
 }

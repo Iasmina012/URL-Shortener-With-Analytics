@@ -300,7 +300,7 @@ async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responde
         Ok(uid) => uid,
         Err(_) => {
             return HttpResponse::Unauthorized()
-                .json(serde_json::json!({ "error": "Unauthorized" }));
+                .json(serde_json::json!({ "error": "Unauthorized." }));
         }
     };
 
@@ -321,7 +321,7 @@ async fn my_urls(pool: web::Data<SqlitePool>, req: HttpRequest) -> impl Responde
             HttpResponse::Ok().json(results)
         }
         Err(_) => HttpResponse::InternalServerError()
-            .json(serde_json::json!({ "error": "Database error" })),
+            .json(serde_json::json!({ "error": "Database error." })),
     }
 
 }
@@ -338,8 +338,8 @@ async fn delete_url_handler(slug: web::Path<String>, pool: web::Data<SqlitePool>
 
     match delete_url(pool.as_ref(), &slug, &user_id).await {
         Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "success": true })),
-        Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Not found or not your link" })),
-        Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Database error" })),
+        Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Not found or not your URL." })),
+        Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Database error." })),
     }
 
 }
@@ -394,7 +394,7 @@ async fn trends(pool: web::Data<SqlitePool>, web::Query(q): web::Query<TrendsQue
             HttpResponse::Ok().json(data)
         }
         Err(e) => {
-            eprintln!("trends error: {}", e);
+            eprintln!("Trends error: {}.", e);
             HttpResponse::InternalServerError().finish()
         }
     }
@@ -418,13 +418,13 @@ async fn main() -> std::io::Result<()> {
         move || {
             thread::sleep(Duration::from_secs(1));
             if webbrowser::open(&url).is_ok() {
-                println!("Browser opened at {}", url);
+                println!("Browser opened at {}.", url);
             } else {
-                println!("Couldn't open browser. Open manually: {}", url);
+                println!("Couldn't open browser. Open manually at: {}.", url);
             }
         }
     });
-    println!("Server running at {}", url);
+    println!("Server running at {}.", url);
 
    HttpServer::new(move || {
         App::new()
