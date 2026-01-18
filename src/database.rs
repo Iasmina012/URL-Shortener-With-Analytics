@@ -268,6 +268,7 @@ pub async fn get_trends(pool: &SqlitePool, q: Option<&str>, filter: &str, metric
 
 }
 
+#[allow(dead_code)]
 pub async fn reset_db(pool: &SqlitePool) -> sqlx::Result<()> {
 
     sqlx::query("DELETE FROM urls").execute(pool).await?;

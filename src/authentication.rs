@@ -4,13 +4,14 @@ use serde::Deserialize;
 use std::collections::{HashMap};
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct FirebaseClaims {
 
     pub sub: String, 
     pub aud: String,
     pub iss: String,
     pub exp: usize,
-
+    //jsonwebtoken uses aud, iss, exp internally so its not dead code actually fr
 }
 
 pub async fn verify_firebase_token(req: &HttpRequest) -> Result<String, HttpResponse> {
