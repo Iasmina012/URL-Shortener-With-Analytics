@@ -27,11 +27,9 @@ pub async fn verify_firebase_token(req: &HttpRequest) -> Result<String, HttpResp
 
     let token = header.trim_start_matches("Bearer ");
 
-    let header = decode_header(token)
-        .map_err(|_| HttpResponse::Unauthorized().body("Invalid token header."))?;
+    let header = decode_header(token).map_err(|_| HttpResponse::Unauthorized().body("Invalid token header."))?;
 
-    let kid = header.kid
-        .ok_or_else(|| HttpResponse::Unauthorized().body("Missing kid."))?;
+    let kid = header.kid.ok_or_else(|| HttpResponse::Unauthorized().body("Missing kid."))?;
 
     let keys: HashMap<String, String> =
         reqwest::get("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com")
@@ -41,20 +39,14 @@ pub async fn verify_firebase_token(req: &HttpRequest) -> Result<String, HttpResp
             .await
             .map_err(|_| HttpResponse::Unauthorized().body("Invalid keys."))?;
 
-    let key = keys
-        .get(&kid)
-        .ok_or_else(|| HttpResponse::Unauthorized().body("Invalid kid."))?;
+    let key = keys.get(&kid).ok_or_else(|| HttpResponse::Unauthorized().body("Invalid kid."))?;
 
     let mut validation = Validation::new(Algorithm::RS256);
 
     validation.set_audience(&["url-shortener-with-analytics"]);
     validation.set_issuer(&["https://securetoken.google.com/url-shortener-with-analytics"]);
 
-    let decoded = decode::<FirebaseClaims>(
-        token,
-        &DecodingKey::from_rsa_pem(key.as_bytes()).unwrap(),
-        &validation,
-    )
+    let decoded = decode::<FirebaseClaims>(token, &DecodingKey::from_rsa_pem(key.as_bytes()).unwrap(), &validation,)
         .map_err(|_| HttpResponse::Unauthorized().body("Invalid token."))?;
 
     Ok(decoded.claims.sub)

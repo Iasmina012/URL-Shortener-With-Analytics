@@ -23,7 +23,7 @@
     }
 
     body {
-      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-family: 'Poppins', sans-serif;
       margin: 0;
       background: #f7f7f9;
       height: 100%;
@@ -51,7 +51,6 @@
       font-size: 1.3rem;
       font-weight: 700;
       letter-spacing: 0.5px;
-      font-family: 'Poppins', sans-serif;
     }
 
     nav {
@@ -163,7 +162,6 @@
     }
 
     .card h1 {
-      font-family: 'Poppins', sans-serif;
       font-size: 1.6rem;
       font-weight: 700;
       color: #1e3a8a;
@@ -317,36 +315,12 @@
     .item-row .item-left {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-
-    .item-left {
-      display: flex;
-      flex-direction: column;
       gap: 6px;
       min-width: 0;
     }
 
-    .item-left a {
-      font-weight: 600;
-      text-decoration: none;
-      color: #2563eb;
-    }
-
     .item-left a:hover {
       text-decoration: underline;
-    }
-
-    .item-left a.short-link {
-      display: block;
-      font-weight: 600;
-      color: #2563eb;
-      text-decoration: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
     }
 
     .item-left a.short-link:hover {
@@ -627,14 +601,12 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .item-left .short-link,
+    .item-left a,
     .trend-left a {
-      font-family: 'Poppins', sans-serif;
       font-weight: 700;
       font-size: 1.05rem;
       color: #2563eb;
       text-decoration: none;
-      transition: color 0.2s ease, transform 0.2s ease;
     }
 
     .item-left .short-link:hover,
@@ -642,10 +614,6 @@
       color: #2563eb;
       text-decoration: underline;
       transform: translateY(-1px);
-    }
-
-    button {
-      font-family: 'Poppins', sans-serif;
     }
 
     #appAnalytics .scrollable-tab {
@@ -725,15 +693,6 @@
       background: #2563eb;
       color: white;
       border-color: #2563eb;
-    }
-
-    .item-row {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .item-top {
-      width: 100%;
     }
 
     .country-list-vertical {
@@ -1092,11 +1051,11 @@
 
       const showQrBtn = document.createElement("button");
       showQrBtn.className = "ghost";
-      showQrBtn.textContent = "Show QR";
+      showQrBtn.textContent = "Show QR Code";
 
       const downloadQrBtn = document.createElement("button");
       downloadQrBtn.className = "ghost";
-      downloadQrBtn.textContent = "Download QR";
+      downloadQrBtn.textContent = "Download QR Code";
 
       const qrImg = document.createElement("img");
       qrImg.src = `/qr/${encodeURIComponent(slug)}`;
@@ -1184,11 +1143,11 @@
       const dropdown = document.createElement("div");
       dropdown.className = "stats-dropdown";
       dropdown.innerHTML = `
-        <div class="stat-item">Expiration Date: ${data.expires_at || 'Never'}</div>
+        <div class="stat-item">Expiration Date: <strong>${data.expires_at || 'Never'}</strong></div>
         <div class="stat-item">Total Clicks: <strong>${data.total_clicks ?? 0}</strong></div>
         <div class="stat-item">Unique Visitors: <strong>${data.unique_visitors ?? 0}</strong></div>
 
-        <div class="stat-item" style="flex-direction:column; align-items:flex-start;">Countries
+        <div class="stat-item" style="flex-direction:column; align-items:flex-start;">Countries: 
           <ul class="country-list-vertical">
             ${(data.countries || []).map(
               ([c, n]) => `
@@ -1202,7 +1161,7 @@
         </div>
         <div style="text-align:center; margin-top:12px;">
           <img src="/qr/${encodeURIComponent(slug)}" class="qr-image-centered">
-          <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR</a>
+          <a href="/qr/${encodeURIComponent(slug)}" download="${slug}.png" class="download-qr">Download QR Code</a>
         </div>
       `;
       analyticsResult.appendChild(dropdown);
@@ -1449,7 +1408,7 @@
 
   function getExpirationLine(expires) {
     if (!expires)
-        return '<div class="expiry-line"><span class="expiry-badge expiry-never" title="Never expires">Never expires</span></div>';
+        return '<div class="expiry-line"><span class="expiry-badge expiry-never" title="Never expires">never expires</span></div>';
 
     const days = daysUntilExpirationDate(expires);
     if (days === null) return '<div class="expiry-line small-muted">Invalid date</div>';
