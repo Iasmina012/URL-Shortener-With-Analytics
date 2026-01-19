@@ -2,14 +2,12 @@
 
 The following project is written in **Rust** using **Actix-Web** and **SQLx + SQLite**. It provides both a RESTful API and a simple web interface using **HTML**, **CSS** and **JavaScript**. The user authentication process is handled through **Firebase**.
 
-**Status**
-
-Development in Progress...
+**Status:** DONE
 
 - `MVP` (shorten URLs with/without custom slug and redirect them);
 - `Analytics` (QR code generator, expiration date, clicks, unique visitors, geographic location);
 - `Requirements` (RESTful API with endpoints for shortening, redirecting and analytics, short code generation [6-8 characters, alphanumeric], rate limiter, DB for URLs and click events, collision detection and handling, web dashboard showing all URLs and statistics);
-- `Authentication`
+- `Firebase Authentication`
 - `Search, Filter & Sort URLs` that were created across the app (without the expired ones)
 
 ## Description
@@ -43,7 +41,7 @@ This makes the project easier to understand, extend, and maintain.
 This architecture strikes a balance between **simplicity** and **scalability**, making it ideal for small to medium web services, educational projects, or prototypes that could later evolve into production grade systems.
 
 <p align="center">
-  <img width="535" height="344" alt="ATAD Architecture" src="https://github.com/user-attachments/assets/a37308be-2b03-4712-931b-b6fae5cd1e0b" />
+  <img width="741" height="390" alt="ATAD Final Architecture" src="https://github.com/user-attachments/assets/2a20cc86-76c1-4d18-a2b4-315c9658feca" />
 </p>
 
 ### Components
@@ -64,7 +62,7 @@ This architecture strikes a balance between **simplicity** and **scalability**, 
   All endpoints are protected by a simple in-memory rate limiter (10 requests per minute per IP address).
 
 - **Services (Logical Components)::**
-  - `URL Service`-> Handles URL creation, storage, retrieval and expiration validation using the database;
+  - `URL Shorten Service`-> Handles URL creation, storage, retrieval and expiration validation using the database;
   - `Analytics Service` -> Tracks and fetches statistics (expiration dates, QR code generator, clicks, unique visitors, geographic location);
   - `QR Code Service` -> Generates QR codes for each shortened URL;
   - `Rate Limiter` -> Restricts the number of requests per IP address within a defined time window.
@@ -102,7 +100,7 @@ This architecture strikes a balance between **simplicity** and **scalability**, 
 
 In order to make your local server publicly accessible, you can use [Ngrok](https://ngrok.com) to expose it. You will need to sign up for an account in order to get a free authentication token!
 
-Make sure Rust, Cargo and Ngrok are installed on your system. Verify using:
+Make sure Rust, Cargo and Ngrok are installed on your system. Verify using the following commands in a terminal:
 
 ```bash
 rustc --version

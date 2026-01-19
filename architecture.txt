@@ -1,0 +1,53 @@
+@startuml
+'==============================
+' URL Shortener With Analytics
+'==============================
+
+package "Web Client" {
+  [Web Dashboard]
+  [Filter / Sort / Search URLs]
+}
+
+package "Authentication" {
+  [Firebase Auth (Email/Password)]
+}
+
+package "API Layer (Actix-Web)" {
+  [RESTful API Endpoints]
+}
+
+package "Services" {
+  [URL Shorten Service]
+  [Analytics Service]
+  [QR Code Service]
+  [Rate Limiter]
+}
+
+package "Database (SQLx + SQLite)" {
+  [URLs Table]
+  [Clicks Table]
+}
+
+'==== Web to Auth ====
+[Web Dashboard] --> [Firebase Auth (Email/Password)] : Sign-In / Get JWT
+
+'==== Web to API ====
+[Web Dashboard] --> [RESTful API Endpoints] : HTTP Requests (POST / GET / DELETE)
+[RESTful API Endpoints] --> [Firebase Auth (Email/Password)] : Validate JWT
+
+'==== API Layer to Services ====
+[RESTful API Endpoints] --> [Rate Limiter] : Check Request Limit
+[RESTful API Endpoints] --> [URL Shorten Service] : Shorten / Redirect / Resolve / Delete URLs
+[RESTful API Endpoints] --> [Analytics Service] : Track Clicks / Fetch Stats (unique visitors, geolocation)
+[RESTful API Endpoints] --> [QR Code Service] : Generate QR Codes
+
+'==== Services to Database ====
+[URL Shorten Service] --> [URLs Table] : INSERT / SELECT / DELETE
+[Analytics Service] --> [Clicks Table] : INSERT Click
+[Analytics Service] --> [URLs Table] : SELECT URL Info
+[QR Code Service] --> [URLs Table] : SELECT URL Info
+
+'==== Frontend Filtering ====
+[Filter / Sort / Search URLs] --> [Web Dashboard] : Operates on fetched data
+
+@enduml
