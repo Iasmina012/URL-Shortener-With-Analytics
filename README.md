@@ -196,6 +196,8 @@ The browser should open automatically. If not, open the URL manually.
 
 This section highlights the main features of the application through screenshots and short explanations, providing a visual overview of the user's experience and the functionality.
 
+---
+
 ### Authentication (Firebase)
 Users authenticate using **Firebase (Email/Password Authentication)** which is used to manage user accounts and secure access to protected resources. Only authenticated users can create, manage and analyze shortened URLs.
 
