@@ -229,7 +229,7 @@ The **My URLs** dashboard provides a centralized view of all URLs created by the
 <p align="center">
   <img width="1500" height="863" alt="My URLs 1" src="https://github.com/user-attachments/assets/d1b500b0-08ff-4b2f-85c8-3acd23cb21dc" />
   <img width="1544" height="907" alt="My URLs 2" src="https://github.com/user-attachments/assets/9b3e376f-ffa0-45e9-b687-ab6732cd71e9" />
-  <img width="1544" height="907" alt="My URLs 3" src="https://github.com/user-attachments/assets/21262104-8759-468e-a082-9bb0d264ae76" />
+  <img width="1544" height="907" alt="My URLs 3" src="https://github.com/user-attachments/assets/31589f09-0323-40e0-b184-79643d30716c" />
 </p>
 
 Users can:
