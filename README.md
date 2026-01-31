@@ -191,3 +191,111 @@ cargo run
 The application will start locally at: http://127.0.0.1:8080/
 
 The browser should open automatically. If not, open the URL manually.
+
+## Screenshots
+
+This section highlights the main features of the application through screenshots and short explanations, providing a visual overview of the user's experience and the functionality.
+
+### Authentication (Firebase)
+Users authenticate using **Firebase (Email/Password Authentication)** which is used to manage user accounts and secure access to protected resources. Only authenticated users can create, manage and analyze shortened URLs.
+
+<p align="center">
+  <img width="1544" height="907" alt="Login" src="https://github.com/user-attachments/assets/90641ca2-7d22-4b9e-82a0-fb18561ee435" />
+</p>
+
+Users can:
+- log in using an existing account by providing an email address and password;
+- receive immediate validation feedback for invalid credentials.
+
+<p align="center">
+  <img width="1544" height="907" alt="Sign Up" src="https://github.com/user-attachments/assets/721fe0fb-2037-4159-aec6-19d99896b6ad" />
+</p>
+
+Authentication is mandatory in order to:
+- shorten URLs;
+- view personal URLs;
+- access analytics and trends data.
+
+Once authenticated, the client retrieves a Firebase ID token, which is then used to authorize API requests to the backend.
+
+---
+
+### My URLs Dashboard
+
+The **My URLs** dashboard provides a centralized view of all URLs created by the authenticated user.
+
+<p align="center">
+  <img width="1500" height="863" alt="My URLs 1" src="https://github.com/user-attachments/assets/d1b500b0-08ff-4b2f-85c8-3acd23cb21dc" />
+  <img width="1544" height="907" alt="My URLs 2" src="https://github.com/user-attachments/assets/9b3e376f-ffa0-45e9-b687-ab6732cd71e9" />
+  <img width="1544" height="907" alt="My URLs 3" src="https://github.com/user-attachments/assets/21262104-8759-468e-a082-9bb0d264ae76" />
+</p>
+
+Users can:
+- view their shortened URLs alongside the original URLs;
+- clearly identify expiration status (never expiring, expiring, expired);
+- copy short URLs to the clipboard;
+- inspect analytics for individual URLs;
+- delete URLs they no longer need.
+
+---
+
+### URL Shortening
+
+This view allows authenticated users to create new shortened URLs.
+
+Users can create shortened URLs by providing:
+- the original long URL;
+- an optional **custom slug**;
+- an optional **expiration date** after which the URL becomes inactive.
+
+<p align="center">
+  <img width="1544" height="907" alt="URL Shortener 1" src="https://github.com/user-attachments/assets/41b2c620-7648-4a1a-bf03-dad6f443b7a0" />
+</p>
+
+After successful creation:
+- the generated short URL is displayed;
+- the URL becomes immediately accessible;
+- the entry is added to the user’s personal dashboard.
+
+If no custom slug is provided, the backend automatically generates a random alphanumeric slug (6–8 characters), retrying generation in case of collisions.
+
+<p align="center">
+  <img width="1544" height="907" alt="URL Shortener 2" src="https://github.com/user-attachments/assets/ccd98e99-734e-4e70-939d-d0690119a61a" />
+</p>
+
+A **QR code** is automatically generated for every shortened URL and can be previewed and downloaded directly from the interface.
+
+---
+
+### Analytics
+Each shortened URL has an associated analytics view that can be accessed on demand.
+
+<p align="center">
+  <img width="1544" height="907" alt="Analytics" src="https://github.com/user-attachments/assets/7e325959-d73c-4db9-b609-20fe21964350" />
+</p>
+
+The view displays:
+- the expiration date of the URL (or *never expires*);
+- the total number of clicks;
+- the number of unique visitors;
+- a breakdown of visitors' geographic locations.
+
+In addition, a **QR code** can be previewed directly in the interface and users can download the QR code image for external use.
+
+---
+
+### Trends
+
+The **Trends** section offers a global overview of the URLs' activity across the entire application.
+
+<p align="center">
+  <img width="1544" height="907" alt="Trends 1" src="https://github.com/user-attachments/assets/97e3ae8e-f121-49eb-96b2-b642400d4f99" />
+  <img width="1544" height="907" alt="Trends 2" src="https://github.com/user-attachments/assets/35ff2d1d-b006-4081-adbe-9a404e8bc0b0" />
+</p>
+
+This view allows users to:
+- search URLs by slug;
+- filter URLs based on popularity (most clicks + unique visitors);
+- sort results by slug name, expiration date, total clicks and unique visitors.
+
+Expired URLs are excluded from this view, ensuring that trends reflect only relevant and active data.
