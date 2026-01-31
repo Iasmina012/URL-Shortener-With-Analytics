@@ -418,7 +418,15 @@
 
     .trend-left {
       flex: 1;
-      min-width: 220px;
+      min-width: 0;
+    }
+
+    .trend-left .small-muted {
+      display: block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .trend-left a {

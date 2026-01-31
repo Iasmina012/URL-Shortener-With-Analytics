@@ -135,9 +135,7 @@ async fn shorten(pool: web::Data<SqlitePool>, json: web::Json<serde_json::Value>
     let ip = get_client_ip(&req);
 
     if !check_rate_limit(&ip) {
-        return HttpResponse::TooManyRequests().json(
-            serde_json::json!({ "error": "Too many requests! Please slow down."})
-        );
+        return HttpResponse::TooManyRequests().json(serde_json::json!({ "error": "Too many requests! Please slow down."}));
     }
 
     let url = match json.get("url").and_then(|v| v.as_str()) {
